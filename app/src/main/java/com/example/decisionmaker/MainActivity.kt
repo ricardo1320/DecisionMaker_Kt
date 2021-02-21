@@ -5,26 +5,23 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.view.View
 import kotlin.random.Random
 import kotlinx.android.synthetic.main.activity_main.*
 
+//Tag for LOG
+private const val TAG = "MainActivity"
+
 class MainActivity : AppCompatActivity() {
+
+    //Initialize variables for the values of animation (spinning the roulette)
+    var startPoint: Float = 0.0f
+    var endPoint: Float = Random.nextFloat()*720.0f + 720.0f
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
-        //Runnable for animating the roulette
-        val rouletteRotThread = Runnable {
-            kotlin.run {
-                //val animator:ObjectAnimator = ObjectAnimator.ofFloat(roulette, "rotation", Random.nextFloat()*720.0f + 720.0f)
-                val animator: ObjectAnimator = ObjectAnimator.ofFloat(roulette, "rotation", Random.nextFloat() * 720.0f + 720.0f)
-                animator.setDuration(2000)
-                animator.start()
-            }
-        }
-
 
         //Post delay runnable for 1500 ms
         //val handler = Handler(Looper.myLooper()!!)
@@ -34,13 +31,24 @@ class MainActivity : AppCompatActivity() {
         val listener = View.OnClickListener { view ->
             when(view.id){
                 R.id.button_spin -> {
-                    rouletteRotThread.run()
+                    spinRoulette(startPoint, endPoint)
+                    startPoint = endPoint
+                    endPoint += Random.nextFloat()*720.0f + 720.0f
                 }
             }
         }
 
         button_spin.setOnClickListener(listener)
 
+    }
+
+    //Function for animating the roulette
+    private fun spinRoulette(start: Float, end: Float){
+        val animator: ObjectAnimator = ObjectAnimator.ofFloat(roulette, "rotation",start, end)
+        animator.setDuration(2000)
+        //Log the values: start and end point of the animation
+        Log.d("MainActivity", "values: ${animator.values[0]}")
+        animator.start()
     }
 
 }
