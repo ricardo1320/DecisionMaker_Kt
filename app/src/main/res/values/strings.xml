@@ -1,4 +1,7 @@
 <resources>
     <string name="app_name">DecisionMaker</string>
     <string name="button_spin_text">Spin</string>
+    <string name="menu_modify_text">Modify options</string>
+    <string name="button_addOption">Add</string>
+    <string name="editText_addOption_hint">Enter option</string>
 </resources>

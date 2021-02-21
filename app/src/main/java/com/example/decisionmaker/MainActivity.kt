@@ -1,11 +1,14 @@
 package com.example.decisionmaker
 
 import android.animation.ObjectAnimator
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import kotlin.random.Random
 import kotlinx.android.synthetic.main.activity_main.*
@@ -51,4 +54,20 @@ class MainActivity : AppCompatActivity() {
         animator.start()
     }
 
+    //Menu overridden methods
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.menu, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.menu_modify -> {
+                //Launch next activity
+                startActivity(Intent(this, OptionsActivity::class.java))
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
 }
