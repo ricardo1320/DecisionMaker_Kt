@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">DecisionMaker</string>
+    <string name="button_spin_text">Spin</string>
 </resources>
