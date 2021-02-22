@@ -21,10 +21,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     //Initialize variables for the values of animation (spinning the roulette)
-    var startPoint: Float = 0.0f
-    var endPoint: Float = Random.nextFloat()*720.0f + 720.0f
+    private var startPoint: Float = 0.0f
+    private var endPoint: Float = Random.nextFloat()*720.0f + 720.0f
 
-    var rouletteOptions:ArrayList<String> = ArrayList()
+    private var rouletteOptions:ArrayList<String> = ArrayList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,9 +47,9 @@ class MainActivity : AppCompatActivity() {
     //Function for animating the roulette
     private fun spinRoulette(start: Float, end: Float){
         val animator: ObjectAnimator = ObjectAnimator.ofFloat(roulette, "rotation",start, end)
-        animator.setDuration(2000)
+        animator.duration = 2000
         //Log the values: start and end point of the animation
-        Log.d("MainActivity", "values: ${animator.values[0]}")
+        Log.d(TAG, "values: ${animator.values[0]}")
         animator.start()
     }
 

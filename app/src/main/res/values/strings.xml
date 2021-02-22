@@ -4,4 +4,7 @@
     <string name="menu_modify_text">Modify options</string>
     <string name="button_addOption">Add</string>
     <string name="editText_addOption_hint">Enter option</string>
+    <string name="menu_clear">Clear</string>
+    <string name="floatButton_ready_desc">Commit options</string>
+    <string name="button_deleteOption_desc">Delete option</string>
 </resources>

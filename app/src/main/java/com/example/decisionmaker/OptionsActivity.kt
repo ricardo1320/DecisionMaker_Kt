@@ -1,17 +1,16 @@
 package com.example.decisionmaker
 
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.text.method.ScrollingMovementMethod
-import android.util.Log
-import android.view.KeyEvent
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
-import com.google.android.material.snackbar.Snackbar
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.DividerItemDecoration
+import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.android.synthetic.main.activity_options.*
 
-//Tag for LOG
-private const val TAG = "OptionsActivity"
 
 class OptionsActivity : AppCompatActivity() {
 
@@ -21,41 +20,42 @@ class OptionsActivity : AppCompatActivity() {
     }
 
     //List to store the options
-    var listOptions = ArrayList<String>()
+    private var listOptions = ArrayList<String>()
+    //Adapter variable
+    private lateinit var myAdapter: OptionsAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_options)
 
-        //Make scrollable the text view
-        textView_Options.movementMethod = ScrollingMovementMethod()
-
+        //Pass the roulette options to the RecyclerView
         if(intent.extras != null){
             listOptions = intent.extras!!.getStringArrayList(OPTIONS_ACT_ROULETTE_LIST)!!
-            for(choice in listOptions){
-                textView_Options.append(choice)
-                textView_Options.append("\n")
-            }
         }
+
+        //Adapter
+        myAdapter = OptionsAdapter(listOptions)
+        recyclerView.adapter = myAdapter
+        recyclerView.layoutManager = LinearLayoutManager(this)
+        recyclerView.addItemDecoration(DividerItemDecoration (this, DividerItemDecoration.VERTICAL))
 
         //Listener
         val listener = View.OnClickListener { view ->
             when(view.id){
                 R.id.button_addOption -> {
-                    textView_Options.append(editText_addOption.text)
-                    textView_Options.append("\n")
-                    listOptions.add(editText_addOption.text.toString())
-                    editText_addOption.text.clear()
-                }
-                R.id.floatButton_ready -> {
                     if(editText_addOption.text.isNotEmpty()){
                         listOptions.add(editText_addOption.text.toString())
+                        myAdapter.loadNewData(listOptions)
+                        editText_addOption.text.clear()
                     }
-                    for (option in listOptions){
-                        Log.d(TAG,"Elemento de la lista: $option")
+                }
+                R.id.floatButton_ready -> {
+                    //AQUI HAY UN MEDIO BUG, YO OPINO MEJOR QUITAR ESTE IF
+                    if (editText_addOption.text.isNotEmpty()) {
+                        listOptions.add(editText_addOption.text.toString())
                     }
-                    Snackbar.make(view,"Regresar a MainActivity y actualizar la ruleta", Snackbar.LENGTH_LONG).setAction("Action", null).show()
-                    setResultAndReturnToActivity()
+                    //Go back to MainActivity and update the Roulette, if the list has at least 2 options
+                    checkMinOptions(listOptions)
                 }
             }
         }
@@ -64,12 +64,39 @@ class OptionsActivity : AppCompatActivity() {
         floatButton_ready.setOnClickListener(listener)
     }
 
+    //Menu overridden methods
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.menu_optionsactivity, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.menu_clear -> {
+                //Clear options -> List and Edit Text
+                editText_addOption.text.clear()
+                listOptions.clear()
+                myAdapter.loadNewData(listOptions)
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+    //Check options are at least two (2)
+    private fun checkMinOptions(list: List<String>){
+        if(list.size < 2)
+            Toast.makeText(this, "At least two options!", Toast.LENGTH_LONG).show()
+        else
+            setResultAndReturnToActivity()
+    }
+
     /**
      * For better UX, detect back key pressed
      * and save entered values
      */
     override fun onBackPressed() {
-        setResultAndReturnToActivity()
+        checkMinOptions(listOptions)
         super.onBackPressed()
     }
 
