@@ -2,13 +2,16 @@ package com.example.decisionmaker
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.KeyEvent
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.decisionmaker.views.OnRouletteViewListener
 import kotlinx.android.synthetic.main.activity_options.*
 
 
@@ -50,15 +53,24 @@ class OptionsActivity : AppCompatActivity() {
                     }
                 }
                 R.id.floatButton_ready -> {
-                    //AQUI HAY UN MEDIO BUG, YO OPINO MEJOR QUITAR ESTE IF
-                    if (editText_addOption.text.isNotEmpty()) {
-                        listOptions.add(editText_addOption.text.toString())
-                    }
                     //Go back to MainActivity and update the Roulette, if the list has at least 2 options
                     checkMinOptions(listOptions)
                 }
             }
         }
+
+        editText_addOption.setOnKeyListener(object:View.OnKeyListener{
+            override fun onKey(v: View?, keyCode: Int, event: KeyEvent?): Boolean {
+                if((event?.action == KeyEvent.ACTION_DOWN) && (keyCode == KeyEvent.KEYCODE_ENTER)){
+                    listOptions.add(editText_addOption.text.toString())
+                    myAdapter.loadNewData(listOptions)
+                    editText_addOption.text.clear()
+                    editText_addOption.requestFocus()
+                    return true
+                }
+                return false
+            }
+        })
 
         button_addOption.setOnClickListener(listener)
         floatButton_ready.setOnClickListener(listener)
@@ -110,4 +122,7 @@ class OptionsActivity : AppCompatActivity() {
         setResult(OPTIONS_ACT_ROULETTE_UPD_OK, result)
         finish()
     }
+
 }
+
+

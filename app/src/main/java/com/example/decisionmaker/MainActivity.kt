@@ -8,21 +8,19 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.widget.Toast
+import com.example.decisionmaker.views.OnRouletteViewListener
 import kotlin.random.Random
 import kotlinx.android.synthetic.main.activity_main.*
 
 //Tag for LOG
 private const val TAG = "MainActivity"
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), OnRouletteViewListener {
 
     companion object{
         const val ROULETTE_OPTIONS_REQUEST_CODE = 10
     }
-
-    //Initialize variables for the values of animation (spinning the roulette)
-    private var startPoint: Float = 0.0f
-    private var endPoint: Float = Random.nextFloat()*720.0f + 720.0f
 
     private var rouletteOptions:ArrayList<String> = ArrayList()
 
@@ -30,28 +28,19 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        roulette.setRouletteOptionList(rouletteOptions)
+        roulette.onRouletteViewListener = this
+
         //Click listener for button_spin (spin the roulette)
         val listener = View.OnClickListener { view ->
             when(view.id){
-                R.id.button_spin -> {
-                    spinRoulette(startPoint, endPoint)
-                    startPoint = endPoint % 360 //Reset angle to be in range 0..360 degrees, for avoiding overflow or precision error due to large values
-                    endPoint = startPoint + Random.nextFloat()*720.0f + 720.0f
-                }
+                R.id.button_spin -> { roulette.spin(6000)  }
             }
         }
 
         button_spin.setOnClickListener(listener)
     }
 
-    //Function for animating the roulette
-    private fun spinRoulette(start: Float, end: Float){
-        val animator: ObjectAnimator = ObjectAnimator.ofFloat(roulette, "rotation",start, end)
-        animator.duration = 2000
-        //Log the values: start and end point of the animation
-        Log.d(TAG, "values: ${animator.values[0]}")
-        animator.start()
-    }
 
     //Menu overridden methods
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -87,6 +76,15 @@ class MainActivity : AppCompatActivity() {
             }
         }
         super.onActivityResult(requestCode, resultCode, data)
+    }
+
+    /**
+     * Roulette spin animation End
+     * @param idx is the picked numeric index in the choice array,
+     * @param choice is the option picked
+     */
+    override fun OnRouletteSpinCompleted(idx: Int, choice: String) {
+        Toast.makeText(this, choice + " win", Toast.LENGTH_SHORT).show()
     }
 
 }
