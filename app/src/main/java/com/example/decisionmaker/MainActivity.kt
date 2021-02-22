@@ -4,8 +4,6 @@ import android.animation.ObjectAnimator
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
@@ -18,31 +16,32 @@ private const val TAG = "MainActivity"
 
 class MainActivity : AppCompatActivity() {
 
+    companion object{
+        const val ROULETTE_OPTIONS_REQUEST_CODE = 10
+    }
+
     //Initialize variables for the values of animation (spinning the roulette)
     var startPoint: Float = 0.0f
     var endPoint: Float = Random.nextFloat()*720.0f + 720.0f
 
+    var rouletteOptions:ArrayList<String> = ArrayList()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
-        //Post delay runnable for 1500 ms
-        //val handler = Handler(Looper.myLooper()!!)
-        //handler.postDelayed(rouletteRotThread, 1500)
 
         //Click listener for button_spin (spin the roulette)
         val listener = View.OnClickListener { view ->
             when(view.id){
                 R.id.button_spin -> {
                     spinRoulette(startPoint, endPoint)
-                    startPoint = endPoint
-                    endPoint += Random.nextFloat()*720.0f + 720.0f
+                    startPoint = endPoint % 360 //Reset angle to be in range 0..360 degrees, for avoiding overflow or precision error due to large values
+                    endPoint = startPoint + Random.nextFloat()*720.0f + 720.0f
                 }
             }
         }
 
         button_spin.setOnClickListener(listener)
-
     }
 
     //Function for animating the roulette
@@ -64,10 +63,30 @@ class MainActivity : AppCompatActivity() {
         return when (item.itemId) {
             R.id.menu_modify -> {
                 //Launch next activity
-                startActivity(Intent(this, OptionsActivity::class.java))
+                val intent = Intent(this, OptionsActivity::class.java)
+                intent.putExtra(OptionsActivity.OPTIONS_ACT_ROULETTE_LIST, rouletteOptions)
+                startActivityForResult(intent, ROULETTE_OPTIONS_REQUEST_CODE)
                 true
             }
             else -> super.onOptionsItemSelected(item)
         }
     }
+
+    /**
+     * Get Activity Result
+     */
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        when(requestCode){
+            ROULETTE_OPTIONS_REQUEST_CODE -> { //Check for OptionsActivity result
+                if(resultCode == OptionsActivity.OPTIONS_ACT_ROULETTE_UPD_OK){ //Roulette option list updated correctly
+                    if(data != null){ //Overwrite list
+                        rouletteOptions = data.getStringArrayListExtra(OptionsActivity.OPTIONS_ACT_ROULETTE_LIST)!!
+                        roulette.setRouletteOptionList(rouletteOptions)
+                    }
+                }
+            }
+        }
+        super.onActivityResult(requestCode, resultCode, data)
+    }
+
 }
