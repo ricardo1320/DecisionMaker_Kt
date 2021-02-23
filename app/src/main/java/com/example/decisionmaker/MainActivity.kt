@@ -1,17 +1,15 @@
 package com.example.decisionmaker
 
-import android.animation.ObjectAnimator
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import android.widget.Toast
 import com.example.decisionmaker.views.OnRouletteViewListener
-import kotlin.random.Random
 import kotlinx.android.synthetic.main.activity_main.*
+import java.util.*
+import kotlin.collections.ArrayList
 
 //Tag for LOG
 private const val TAG = "MainActivity"
@@ -34,11 +32,20 @@ class MainActivity : AppCompatActivity(), OnRouletteViewListener {
         //Click listener for button_spin (spin the roulette)
         val listener = View.OnClickListener { view ->
             when(view.id){
-                R.id.button_spin -> { roulette.spin(6000)  }
+                R.id.button_spin -> {
+                    textView_result.text = resources.getString(R.string.EMPTY_STRING)
+                    roulette.spin(6000)
+                }
             }
         }
 
         button_spin.setOnClickListener(listener)
+    }
+
+    //onResume -> clear the result textView, when returning from OptionsActivity
+    override fun onResume() {
+        textView_result.text = resources.getString(R.string.EMPTY_STRING)
+        super.onResume()
     }
 
 
@@ -84,7 +91,7 @@ class MainActivity : AppCompatActivity(), OnRouletteViewListener {
      * @param choice is the option picked
      */
     override fun OnRouletteSpinCompleted(idx: Int, choice: String) {
-        Toast.makeText(this, choice + " win", Toast.LENGTH_SHORT).show()
+        textView_result.text = choice.toUpperCase(Locale.ROOT)
     }
 
 }

@@ -6,12 +6,10 @@ import android.view.KeyEvent
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.decisionmaker.views.OnRouletteViewListener
 import kotlinx.android.synthetic.main.activity_options.*
 
 
@@ -62,11 +60,13 @@ class OptionsActivity : AppCompatActivity() {
         editText_addOption.setOnKeyListener(object:View.OnKeyListener{
             override fun onKey(v: View?, keyCode: Int, event: KeyEvent?): Boolean {
                 if((event?.action == KeyEvent.ACTION_DOWN) && (keyCode == KeyEvent.KEYCODE_ENTER)){
-                    listOptions.add(editText_addOption.text.toString())
-                    myAdapter.loadNewData(listOptions)
-                    editText_addOption.text.clear()
-                    editText_addOption.requestFocus()
-                    return true
+                    if(editText_addOption.text.isNotEmpty()){
+                        listOptions.add(editText_addOption.text.toString())
+                        myAdapter.loadNewData(listOptions)
+                        editText_addOption.text.clear()
+                        editText_addOption.requestFocus()
+                        return true
+                    }
                 }
                 return false
             }

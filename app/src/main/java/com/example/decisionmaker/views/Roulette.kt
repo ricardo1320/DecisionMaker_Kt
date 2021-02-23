@@ -1,7 +1,6 @@
 package com.example.decisionmaker.views
 
 import android.animation.Animator
-import android.animation.AnimatorListenerAdapter
 import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.*
@@ -51,7 +50,7 @@ class Roulette : View {
         highlightPaint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
         highlightPaint.strokeWidth = 5f
 
-        chooserPaint.color = Color.LTGRAY
+        chooserPaint.color = Color.DKGRAY
 
         tSize = getTextBoxOffset("o").second
     }
@@ -100,19 +99,19 @@ class Roulette : View {
         val radius = dim/2
 
         val triangle = Path()
-        triangle.moveTo(cx + 0f, cy - radius + 10)
-        triangle.lineTo(cx + 30f, cy - radius - 30)
-        triangle.lineTo(cx - 30f, cy - radius - 30)
-        triangle.lineTo(cx + 0f, cy - radius + 10)
+        triangle.moveTo(cx + 0f, cy - radius + 30)
+        triangle.lineTo(cx + 20f, cy - radius - 50)
+        triangle.lineTo(cx - 20f, cy - radius - 50)
+        triangle.lineTo(cx + 0f, cy - radius + 30)
         triangle.close()
 
         //Empty roulette, draw single circle with advice text
         if(n == 0) {
-            val t1Off = getTextBoxOffset("Ruleta")
-            val t2Off = getTextBoxOffset("vacia")
+            val t1Off = getTextBoxOffset("Add")
+            val t2Off = getTextBoxOffset("choices")
             canvas.drawCircle(cx, cy, radius, rouletteColors[0])
-            canvas.drawText("Ruleta", cx - t1Off.first, cy - (t1Off.second*1.5).toInt(), highlightPaint)
-            canvas.drawText("vacia", cx - t2Off.first, cy + (t2Off.second*1.5).toInt(), highlightPaint)
+            canvas.drawText("Add", cx - t1Off.first, cy - (t1Off.second*1.5).toInt(), highlightPaint)
+            canvas.drawText("choices", cx - t2Off.first, cy + (t2Off.second*1.5).toInt(), highlightPaint)
             canvas.drawPath(triangle, chooserPaint)
             return
         }
@@ -195,7 +194,7 @@ class Roulette : View {
      * Spin animation listener, implements the onAnimationEnd listener
      * calculates the choice index, depending on roulette orientation
      */
-    val spinAnimationListener = object:Animator.AnimatorListener{
+    private val spinAnimationListener = object:Animator.AnimatorListener{
         override fun onAnimationEnd(animation: Animator?) {
             animationStarted = false //Free flag for starting another animation process
             if(rouletteOptions.size == 0) return //Empty roulette
