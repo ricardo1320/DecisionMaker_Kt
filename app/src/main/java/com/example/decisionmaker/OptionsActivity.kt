@@ -18,6 +18,7 @@ class OptionsActivity : AppCompatActivity() {
     companion object{
         const val OPTIONS_ACT_ROULETTE_LIST:String = "ROULETTE_LIST"
         const val OPTIONS_ACT_ROULETTE_UPD_OK:Int = 1
+        const val TEXT_CONTENT:String = "TEXT_CONTENT"
     }
 
     //Adapter variable
@@ -65,6 +66,19 @@ class OptionsActivity : AppCompatActivity() {
 
         button_addOption.setOnClickListener(listener)
         floatButton_ready.setOnClickListener(listener)
+    }
+
+    //Manage screen orientation changes
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putStringArrayList(OPTIONS_ACT_ROULETTE_LIST, myAdapter.getOptions())
+        outState.putString(TEXT_CONTENT, editText_addOption.text.toString())
+    }
+
+    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
+        super.onRestoreInstanceState(savedInstanceState)
+        myAdapter.loadNewData(savedInstanceState.getStringArrayList(OPTIONS_ACT_ROULETTE_LIST)!!)
+        editText_addOption.setText(savedInstanceState.getString(TEXT_CONTENT))
     }
 
     //Menu overridden methods

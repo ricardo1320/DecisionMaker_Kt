@@ -46,6 +46,7 @@ class OptionsAdapter(private var listOptions: ArrayList<String>) : RecyclerView.
 
     fun clear(){
         listOptions.clear()
+        notifyDataSetChanged()
     }
 
     //Returns the total count of items in the list
