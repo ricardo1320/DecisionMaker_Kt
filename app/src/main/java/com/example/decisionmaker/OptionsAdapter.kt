@@ -31,8 +31,21 @@ class OptionsAdapter(private var listOptions: ArrayList<String>) : RecyclerView.
         //Listener for delete option button. Remove from the list and the recycler view
         holder.buttonDeleteOption.setOnClickListener {
             listOptions.removeAt(position)
-            loadNewData(listOptions)
+            notifyDataSetChanged()
         }
+    }
+
+    fun getOptions() : ArrayList<String>{
+        return listOptions
+    }
+
+    fun addOption(choice:String){
+        listOptions.add(choice)
+        notifyDataSetChanged()
+    }
+
+    fun clear(){
+        listOptions.clear()
     }
 
     //Returns the total count of items in the list
