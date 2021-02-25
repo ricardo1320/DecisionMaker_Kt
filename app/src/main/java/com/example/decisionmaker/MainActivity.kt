@@ -28,21 +28,20 @@ class MainActivity : AppCompatActivity(), OnRouletteViewListener {
         const val ROULETTE_OPTIONS_REQUEST_CODE = 10
     }
 
-    private var rouletteOptions:ArrayList<String> = ArrayList()
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+
+        var rouletteOptions:ArrayList<String> = ArrayList()
         rouletteOptions.add("Tacos")
         rouletteOptions.add("Pizza")
         rouletteOptions.add("Sushi")
         rouletteOptions.add("Tortas")
         rouletteOptions.add("Hot-dogs")
-
         roulette.setRouletteOptionList(rouletteOptions)
-        roulette.onRouletteViewListener = this
 
+        roulette.onRouletteViewListener = this
 
         //Click listener for button_spin (spin the roulette)
         val listener = View.OnClickListener { view ->
@@ -77,7 +76,7 @@ class MainActivity : AppCompatActivity(), OnRouletteViewListener {
             R.id.menu_modify -> {
                 //Launch next activity
                 val intent = Intent(this, OptionsActivity::class.java)
-                intent.putExtra(OptionsActivity.OPTIONS_ACT_ROULETTE_LIST, rouletteOptions)
+                intent.putExtra(OptionsActivity.OPTIONS_ACT_ROULETTE_LIST, roulette.getRouletteOptionList())
                 startActivityForResult(intent, ROULETTE_OPTIONS_REQUEST_CODE)
                 true
             }
@@ -90,12 +89,9 @@ class MainActivity : AppCompatActivity(), OnRouletteViewListener {
      */
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         when(requestCode){
-            ROULETTE_OPTIONS_REQUEST_CODE -> { //Check for OptionsActivity result
-                if(resultCode == OptionsActivity.OPTIONS_ACT_ROULETTE_UPD_OK){ //Roulette option list updated correctly
-                    if(data != null){ //Overwrite list
-                        rouletteOptions = data.getStringArrayListExtra(OptionsActivity.OPTIONS_ACT_ROULETTE_LIST)!!
-                        roulette.setRouletteOptionList(rouletteOptions)
-                    }
+            ROULETTE_OPTIONS_REQUEST_CODE -> {                                  //Check for OptionsActivity result
+                if(resultCode == OptionsActivity.OPTIONS_ACT_ROULETTE_UPD_OK){  //Roulette option list updated correctly
+                    roulette.setRouletteOptionList(data?.getStringArrayListExtra(OptionsActivity.OPTIONS_ACT_ROULETTE_LIST)!!)
                 }
             }
         }
@@ -115,7 +111,7 @@ class MainActivity : AppCompatActivity(), OnRouletteViewListener {
 
     override fun OnRouletteSpinEvent(speed: Float) {
         Log.d("ROULETTE SPIN EVT", speed.toString())
-        if(abs(speed) > 0.075f) {
+        if(roulette.getRouletteOptionsCount() > 1 && abs(speed) > 0.09f) {
             textView_result.text = resources.getString(R.string.EMPTY_STRING)
             val t = (min(9000f, 7000f*abs(speed))).toLong()
             roulette.spin(t, 1.25f*speed)
@@ -124,13 +120,6 @@ class MainActivity : AppCompatActivity(), OnRouletteViewListener {
 
     val handler = Handler(Looper.myLooper()!!)
 
-    /*val runT = object:Runnable {
-        override fun run() {
-
-            handler.postDelayed(this, 60)
-        }
-    }
-    handler.postDelayed(runT, 1000)*/
 
     var lastOptionChangeTime = System.currentTimeMillis()
 
@@ -142,9 +131,7 @@ class MainActivity : AppCompatActivity(), OnRouletteViewListener {
         }
         lastOptionChangeTime = t
 
-            mp?.seekTo(0)
-            mp?.start()
-
-
+        mp?.seekTo(0)
+        mp?.start()
     }
 }
