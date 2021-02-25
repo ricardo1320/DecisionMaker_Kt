@@ -141,11 +141,10 @@ class MainActivity : AppCompatActivity(), OnRouletteViewListener {
             return
         }
         lastOptionChangeTime = t
-        runOnUiThread(Runnable {
 
             mp?.seekTo(0)
             mp?.start()
-        })
+
 
     }
 }
