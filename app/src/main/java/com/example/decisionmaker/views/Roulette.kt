@@ -166,27 +166,35 @@ class Roulette : View {
         canvas.drawPath(triangle, chooserPaint)
     }
 
-    private var animationStarted = false
+    private fun getRouletteIndex(step:Float):Int{
+        if(rouletteOptions.size == 0) return -1
+        if(rouletteOptions.size == 1) return  1
+        return (floor(rouletteOptions.size - (rouletteOrientation - 0.5*step) / step) % rouletteOptions.size).toInt()
+    }
 
+    private var animationStarted = false
+    private var lastStep = 0
     /**
-     * Start spin animation, random values handled inside this methos
+     * Start spin animation
      * @param ms is the animation duration in milliseconds
      */
     fun spin(ms:Long, speed:Float=1f){
         if(!animationStarted){
             animationStarted = true
             val tEnd = ms / 1000f
-            val k = 9/tEnd
-
-            val b0 = rouletteOrientation
-            val randomRot = 360f*(floor(5.5f/k) + 2.01f*Random.nextFloat())*speed
             val animator = ValueAnimator.ofFloat(0f, tEnd)
-            animator.duration = ms
+            val step = 360f/rouletteOptions.size
 
+            animator.duration = ms
             animator.addUpdateListener {
                 val t = it.animatedValue as Float
-                val b = randomRot * (1 - exp(-0.8f*t*k))
-                rouletteOrientation = (b0 + b)%360
+                val b = speed*(tEnd - t)
+                rouletteOrientation = (rouletteOrientation + b)%360
+                val st = getRouletteIndex(360f/rouletteOptions.size)
+                if(lastStep != st){
+                    onRouletteViewListener?.OnRouletteOptionChanged()
+                    lastStep = st
+                }
                 invalidate()
             }
             animator.addListener(spinAnimationListener)
@@ -206,7 +214,6 @@ class Roulette : View {
                 onRouletteViewListener?.OnRouletteSpinCompleted(0, rouletteOptions[0])
                 return
             }
-
 
             val n = rouletteOptions.size
             rouletteOrientation %= 360f //Valid ranges between 0 and 360 degrees
@@ -275,7 +282,7 @@ class Roulette : View {
             MotionEvent.ACTION_DOWN->{
                 Log.d("RT_TOUCH_EVT", "DOWN: " + p.x + ", " + p.y)
                 if(animationStarted) return false
-                if(p.length() <= r) { //New action down
+                if(p.length() in 1f..r) { //New action down
                     moveLastPoint = PointF(p.x, p.y)
                     rotSpeed = 1f
                     actionDown = true
@@ -285,7 +292,7 @@ class Roulette : View {
             MotionEvent.ACTION_MOVE -> {
                 if (animationStarted) return false
 
-                if (p.length() > r) { //Touch event outside the roulette
+                if (p.length() > r || p.length() < 1f) { //Touch event outside the roulette
                     actionDown = false
                     actionDownOutRt = true
                     return false
@@ -304,7 +311,7 @@ class Roulette : View {
                 tStart = t
 
                 val pp =  moveLastPoint.x*p.x + moveLastPoint.y*p.y //Scalar product v1·v2
-                val cosa = pp / (moveLastPoint.length()*p.length()) //cos(α) = v1·v2/(|v1|·|v2|)
+                val cosa = max(-1f, min(1f, pp / (moveLastPoint.length()*p.length()))) //cos(α) = v1·v2/(|v1|·|v2|), due to float precision error, assert 1 ≤ cos(a) ≤ 1
                 var a = 180f * (acos(cosa)) / PI.toFloat() //Angle between vectors in degrees
 
                 //Rotation direction given by the sign of the z component of the
