@@ -8,4 +8,5 @@
     <string name="floatButton_ready_desc">Commit options</string>
     <string name="button_deleteOption_desc">Delete option</string>
     <string name="EMPTY_STRING">""</string>
+    <string name="editText_title_hint">Add a title</string>
 </resources>

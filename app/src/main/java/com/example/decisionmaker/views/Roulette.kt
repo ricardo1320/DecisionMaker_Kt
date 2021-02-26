@@ -304,6 +304,21 @@ class Roulette : View {
     }
 
     /**
+     * Get the roulette rotation
+     */
+    fun getRouletteRotation():Float{
+        return geom.rotation
+    }
+
+    /**
+     * Set the Roulette rotation
+     * @param rotation is the roulette rotation
+     */
+    fun setRouletteRotation(rotation:Float){
+        geom.rotation = rotation
+    }
+
+    /**
      * Get text bounds depending on highlightPaint textSize,
      * then calculate the x and y relative centers
      * @param txt is the text string for calculating its bounds

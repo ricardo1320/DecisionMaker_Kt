@@ -10,6 +10,8 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
 import com.example.decisionmaker.views.OnRouletteViewListener
 import kotlinx.android.synthetic.main.activity_main.*
 import java.util.*
@@ -26,6 +28,8 @@ class MainActivity : AppCompatActivity(), OnRouletteViewListener {
 
     companion object{
         const val ROULETTE_OPTIONS_REQUEST_CODE = 10
+        const val MAIN_ACT_ROULETTE_ROTATION: String = "ROULETTE_ROTATION"
+        const val MAIN_ACT_TEXTVIEW_RESULT: String = "TEXTVIEW_RESULT"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -56,14 +60,21 @@ class MainActivity : AppCompatActivity(), OnRouletteViewListener {
         button_spin.setOnClickListener(listener)
         mp = MediaPlayer.create(this@MainActivity, R.raw.pop2)
         sd = (mp?.duration!!/2).toInt()
-    }
 
-    //onResume -> clear the result textView, when returning from OptionsActivity
-    override fun onResume() {
-        textView_result.text = resources.getString(R.string.EMPTY_STRING)
-        super.onResume()
-    }
+        //Listener to clearFocus on editText_title, after user modifies the Title
+        editText_title.setOnEditorActionListener { view, actionId, event ->
+            when(actionId){
+                EditorInfo.IME_ACTION_DONE -> {
+                    val inputMethodManager = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+                    inputMethodManager.hideSoftInputFromWindow(view.windowToken, 0)
+                    editText_title.clearFocus()
+                    true
+                }
+                else -> false
+            }
+        }
 
+    }
 
     //Menu overridden methods
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -84,6 +95,21 @@ class MainActivity : AppCompatActivity(), OnRouletteViewListener {
         }
     }
 
+    //Manage screen orientation changes
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putStringArrayList(OptionsActivity.OPTIONS_ACT_ROULETTE_LIST, roulette.getRouletteOptionList())
+        outState.putFloat(MAIN_ACT_ROULETTE_ROTATION, roulette.getRouletteRotation())
+        outState.putString(MAIN_ACT_TEXTVIEW_RESULT, textView_result.text.toString())
+    }
+
+    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
+        super.onRestoreInstanceState(savedInstanceState)
+        roulette.setRouletteRotation(savedInstanceState.getFloat(MAIN_ACT_ROULETTE_ROTATION))
+        roulette.setRouletteOptionList(savedInstanceState.getStringArrayList(OptionsActivity.OPTIONS_ACT_ROULETTE_LIST)!!)
+        textView_result.text = savedInstanceState.getString(MAIN_ACT_TEXTVIEW_RESULT)
+    }
+
     /**
      * Get Activity Result
      */
@@ -92,6 +118,8 @@ class MainActivity : AppCompatActivity(), OnRouletteViewListener {
             ROULETTE_OPTIONS_REQUEST_CODE -> {                                  //Check for OptionsActivity result
                 if(resultCode == OptionsActivity.OPTIONS_ACT_ROULETTE_UPD_OK){  //Roulette option list updated correctly
                     roulette.setRouletteOptionList(data?.getStringArrayListExtra(OptionsActivity.OPTIONS_ACT_ROULETTE_LIST)!!)
+                    textView_result.text = resources.getString(R.string.EMPTY_STRING)
+                    roulette.setRouletteRotation(0f)
                 }
             }
         }
