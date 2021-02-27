@@ -6,6 +6,34 @@
     android:layout_height="match_parent"
     tools:context=".OptionsActivity">
 
+    <Button
+        android:id="@+id/button_clearTitle"
+        style="@style/Theme.DecisionMaker"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="32dp"
+        android:text="@string/menu_clear"
+        app:layout_constraintBottom_toBottomOf="@+id/editText_RouletteTitle"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/editText_RouletteTitle" />
+
+    <EditText
+        android:id="@+id/editText_RouletteTitle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="32dp"
+        android:layout_marginTop="32dp"
+        android:layout_marginEnd="32dp"
+        android:autofillHints=""
+        android:ems="10"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:hint="@string/editText_title_hint"
+        android:inputType="text"
+        app:layout_constraintEnd_toStartOf="@+id/button_clearTitle"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
     <EditText
         android:id="@+id/editText_addOption"
         android:layout_width="0dp"
@@ -15,23 +43,24 @@
         android:layout_marginEnd="32dp"
         android:autofillHints=""
         android:ems="10"
-        android:hint="@string/editText_addOption_hint"
-        android:inputType="text"
         android:focusable="true"
         android:focusableInTouchMode="true"
+        android:hint="@string/editText_addOption_hint"
+        android:inputType="text"
         app:layout_constraintEnd_toStartOf="@+id/button_addOption"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/editText_RouletteTitle" />
 
     <Button
         android:id="@+id/button_addOption"
+        style="@style/Theme.DecisionMaker"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="32dp"
         android:layout_marginEnd="32dp"
         android:text="@string/button_addOption"
+        app:layout_constraintBottom_toBottomOf="@+id/editText_addOption"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="@+id/editText_addOption" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerView"

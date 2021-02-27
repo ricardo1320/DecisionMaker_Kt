@@ -13,10 +13,11 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.android.synthetic.main.activity_options.*
 
 
-class OptionsActivity : AppCompatActivity() {
+class OptionsActivity : AppCompatActivity(), View.OnClickListener {
 
     companion object{
         const val OPTIONS_ACT_ROULETTE_LIST:String = "ROULETTE_LIST"
+        const val OPTIONS_ACT_ROULETTE_TITLE:String = "ROULETTE_TITLE"
         const val OPTIONS_ACT_ROULETTE_UPD_OK:Int = 1
         const val TEXT_CONTENT:String = "TEXT_CONTENT"
     }
@@ -30,25 +31,13 @@ class OptionsActivity : AppCompatActivity() {
 
         //Adapter
         myAdapter = OptionsAdapter(intent.extras!!.getStringArrayList(OPTIONS_ACT_ROULETTE_LIST)!!)
+        val title = intent.extras!!.getString(OPTIONS_ACT_ROULETTE_TITLE, "")
+        if(title.isNotBlank()) editText_RouletteTitle.setText(title)
+
         recyclerView.adapter = myAdapter
         recyclerView.layoutManager = LinearLayoutManager(this)
         recyclerView.addItemDecoration(DividerItemDecoration (this, DividerItemDecoration.VERTICAL))
 
-        //Listener
-        val listener = View.OnClickListener { view ->
-            when(view.id){
-                R.id.button_addOption -> {
-                    if(editText_addOption.text.isNotEmpty()){
-                        myAdapter.addOption(editText_addOption.text.toString())
-                        editText_addOption.text.clear()
-                    }
-                }
-                R.id.floatButton_ready -> {
-                    //Go back to MainActivity and update the Roulette, if the list has at least 2 options
-                    checkMinOptions()
-                }
-            }
-        }
 
         editText_addOption.setOnKeyListener(object:View.OnKeyListener{
             override fun onKey(v: View?, keyCode: Int, event: KeyEvent?): Boolean {
@@ -64,8 +53,27 @@ class OptionsActivity : AppCompatActivity() {
             }
         })
 
-        button_addOption.setOnClickListener(listener)
-        floatButton_ready.setOnClickListener(listener)
+        button_addOption.setOnClickListener(this)
+        button_clearTitle.setOnClickListener(this)
+        floatButton_ready.setOnClickListener(this)
+    }
+
+    override fun onClick(v: View) {
+        when(v.id){
+            R.id.button_addOption -> {
+                if(editText_addOption.text.isNotEmpty()){
+                    myAdapter.addOption(editText_addOption.text.toString())
+                    editText_addOption.text.clear()
+                }
+            }
+            R.id.button_clearTitle -> {
+                editText_RouletteTitle.text.clear()
+            }
+            R.id.floatButton_ready -> {
+                //Go back to MainActivity and update the Roulette, if the list has at least 2 options
+                checkMinOptions()
+            }
+        }
     }
 
     //Manage screen orientation changes
@@ -101,6 +109,8 @@ class OptionsActivity : AppCompatActivity() {
 
     //Check options are at least two (2)
     private fun checkMinOptions(){
+        if(editText_RouletteTitle.text.isBlank())
+            editText_RouletteTitle.setText("Roulette 1")
         if(myAdapter.itemCount < 2)
             Toast.makeText(this, "At least two options!", Toast.LENGTH_LONG).show()
         else
@@ -123,9 +133,12 @@ class OptionsActivity : AppCompatActivity() {
     private fun setResultAndReturnToActivity(){
         val result = Intent()
         result.putExtra(OPTIONS_ACT_ROULETTE_LIST, myAdapter.getOptions())
+        result.putExtra(OPTIONS_ACT_ROULETTE_TITLE, editText_RouletteTitle.text.toString())
         setResult(OPTIONS_ACT_ROULETTE_UPD_OK, result)
         finish()
     }
+
+
 
 }
 

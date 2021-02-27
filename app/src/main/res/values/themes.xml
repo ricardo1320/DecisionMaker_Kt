@@ -1,9 +1,9 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
-    <style name="Theme.DecisionMaker" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
+    <style name="Theme.DecisionMaker" parent="Theme.MaterialComponents.DayNight">
         <!-- Primary brand color. -->
-        <item name="colorPrimary">@color/purple_500</item>
-        <item name="colorPrimaryVariant">@color/purple_700</item>
+        <item name="colorPrimary">@color/white</item>
+        <item name="colorPrimaryVariant">@color/white</item>
         <item name="colorOnPrimary">@color/white</item>
         <!-- Secondary brand color. -->
         <item name="colorSecondary">@color/teal_200</item>
@@ -11,6 +11,20 @@
         <item name="colorOnSecondary">@color/black</item>
         <!-- Status bar color. -->
         <item name="android:statusBarColor" tools:targetApi="l">?attr/colorPrimaryVariant</item>
+        <item name="android:windowLightStatusBar">true</item>
         <!-- Customize your theme here. -->
+
+        <item name="backgroundTint">@color/black</item>
     </style>
+
+    <style name="Theme.DecisionMaker.IconTint">
+        <item name="tint">@color/black</item>
+        <item name="iconTint">@color/black</item>
+    </style>
+
+    <style name="Theme.DecisionMaker.TextView">
+        <item name="android:textColor">@color/black</item>
+    </style>
+
+
 </resources>

@@ -1,6 +1,9 @@
 package com.example.decisionmaker
 
 import android.content.Intent
+import android.graphics.Color
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffColorFilter
 import android.media.MediaPlayer
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -12,6 +15,8 @@ import android.view.MenuItem
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
+import android.widget.Toast
+import androidx.core.content.res.ResourcesCompat
 import com.example.decisionmaker.views.OnRouletteViewListener
 import kotlinx.android.synthetic.main.activity_main.*
 import java.util.*
@@ -37,13 +42,14 @@ class MainActivity : AppCompatActivity(), OnRouletteViewListener {
         setContentView(R.layout.activity_main)
 
 
-        var rouletteOptions:ArrayList<String> = ArrayList()
+        val rouletteOptions:ArrayList<String> = ArrayList()
         rouletteOptions.add("Tacos")
         rouletteOptions.add("Pizza")
         rouletteOptions.add("Sushi")
         rouletteOptions.add("Tortas")
         rouletteOptions.add("Hot-dogs")
         roulette.setRouletteOptionList(rouletteOptions)
+        textView_title.text ="¿Qué comemos?"
 
         roulette.onRouletteViewListener = this
 
@@ -59,26 +65,32 @@ class MainActivity : AppCompatActivity(), OnRouletteViewListener {
 
         button_spin.setOnClickListener(listener)
         mp = MediaPlayer.create(this@MainActivity, R.raw.pop2)
-        sd = (mp?.duration!!/2).toInt()
+        sd = (mp?.duration!!/1.5).toInt()
 
         //Listener to clearFocus on editText_title, after user modifies the Title
-        editText_title.setOnEditorActionListener { view, actionId, event ->
+        /*textView_title.setOnEditorActionListener { view, actionId, event ->
             when(actionId){
                 EditorInfo.IME_ACTION_DONE -> {
                     val inputMethodManager = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
                     inputMethodManager.hideSoftInputFromWindow(view.windowToken, 0)
-                    editText_title.clearFocus()
+                    textView_title.clearFocus()
                     true
                 }
                 else -> false
             }
-        }
-
+        }*/
     }
 
     //Menu overridden methods
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.menu, menu)
+        val menuItem = menu?.findItem(R.id.menu_modify)
+        val icon = ResourcesCompat.getDrawable(resources, R.drawable.ic_action_edit, theme)
+        val styledArray = obtainStyledAttributes(R.style.Theme_DecisionMaker, intArrayOf(R.attr.backgroundTint))
+        val color = styledArray.getColor(0, Color.CYAN)
+        styledArray.recycle()
+        icon?.colorFilter = PorterDuffColorFilter(color, PorterDuff.Mode.SRC_IN)
+        menuItem?.icon = icon
         return true
     }
 
@@ -86,8 +98,13 @@ class MainActivity : AppCompatActivity(), OnRouletteViewListener {
         return when (item.itemId) {
             R.id.menu_modify -> {
                 //Launch next activity
+                if(roulette.isAnimationRunning()){
+                    Toast.makeText(this, "Wait until roulette spin completed", Toast.LENGTH_SHORT).show()
+                    return false
+                }
                 val intent = Intent(this, OptionsActivity::class.java)
                 intent.putExtra(OptionsActivity.OPTIONS_ACT_ROULETTE_LIST, roulette.getRouletteOptionList())
+                intent.putExtra(OptionsActivity.OPTIONS_ACT_ROULETTE_TITLE, textView_title.text.toString())
                 startActivityForResult(intent, ROULETTE_OPTIONS_REQUEST_CODE)
                 true
             }
@@ -118,6 +135,7 @@ class MainActivity : AppCompatActivity(), OnRouletteViewListener {
             ROULETTE_OPTIONS_REQUEST_CODE -> {                                  //Check for OptionsActivity result
                 if(resultCode == OptionsActivity.OPTIONS_ACT_ROULETTE_UPD_OK){  //Roulette option list updated correctly
                     roulette.setRouletteOptionList(data?.getStringArrayListExtra(OptionsActivity.OPTIONS_ACT_ROULETTE_LIST)!!)
+                    textView_title.text = data.getStringExtra(OptionsActivity.OPTIONS_ACT_ROULETTE_TITLE)
                     textView_result.text = resources.getString(R.string.EMPTY_STRING)
                     roulette.setRouletteRotation(0f)
                 }
@@ -142,7 +160,7 @@ class MainActivity : AppCompatActivity(), OnRouletteViewListener {
         if(roulette.getRouletteOptionsCount() > 1 && abs(speed) > 0.09f) {
             textView_result.text = resources.getString(R.string.EMPTY_STRING)
             val t = (min(9000f, 7000f*abs(speed))).toLong()
-            roulette.spin(t, 1.25f*speed)
+            roulette.spin(t, 1.1f*speed)
         }
     }
 
@@ -152,7 +170,7 @@ class MainActivity : AppCompatActivity(), OnRouletteViewListener {
     var lastOptionChangeTime = System.currentTimeMillis()
 
     override fun OnRouletteOptionChanged() {
-        var t = System.currentTimeMillis()
+        val t = System.currentTimeMillis()
         val dt = t-lastOptionChangeTime
         if(dt < sd){
             return

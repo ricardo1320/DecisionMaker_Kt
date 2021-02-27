@@ -136,7 +136,6 @@ class Roulette : View {
 
     /**
      * Function for initializing the class (avoids repeated code in constructor)
-     * @param attributes is the attribute set that describes the view
      */
     private fun init() {
         setBackgroundColor(Color.TRANSPARENT)   //Avoid phone theme apply to the view
@@ -222,6 +221,11 @@ class Roulette : View {
 
     private var animationStarted = false
     private var lastStep = 0
+
+    fun isAnimationRunning() : Boolean{
+        return animationStarted
+    }
+
     /**
      * Start spin animation
      * @param ms is the animation duration in milliseconds
@@ -337,6 +341,7 @@ class Roulette : View {
     private var actionDownOutRt = false
     private var rotSpeed = 1f
     private var tStart:Long = 0
+    private var moved = false
 
     /**
      * Overrides the touch event function
@@ -347,7 +352,7 @@ class Roulette : View {
 
         when(event.action.and(MotionEvent.ACTION_MASK)){
             MotionEvent.ACTION_UP -> {
-                if(actionDown || actionDownOutRt) onRouletteViewListener?.OnRouletteSpinEvent(rotSpeed)
+                if((actionDown || actionDownOutRt) && moved) onRouletteViewListener?.OnRouletteSpinEvent(rotSpeed)
                 actionDown = false
                 actionDownOutRt = false
                 return false
@@ -355,10 +360,11 @@ class Roulette : View {
             MotionEvent.ACTION_DOWN->{
                 Log.d("RT_TOUCH_EVT", "DOWN: " + p.x + ", " + p.y)
                 if(animationStarted) return false
-                if(p.length() in 1f..geom.radius) { //New action down
+                if((p.length() <= geom.radius) && (p.length() > 1)) { //New action down
                     moveLastPoint = PointF(p.x, p.y)
                     rotSpeed = 1f
                     actionDown = true
+                    moved = false
                     tStart = System.currentTimeMillis()
                 }
             }
@@ -369,12 +375,14 @@ class Roulette : View {
                     actionDown = false
                     actionDownOutRt = true
                     return false
-                } else if (!actionDown && p.length() <= geom.radius) { //New action down event
+                } else if (!actionDown && (p.length() <= geom.radius)) { //New action down event
                     actionDown = true
                     moveLastPoint = PointF(p.x, p.y)
                     rotSpeed = 1f
                     tStart = System.currentTimeMillis()
                     actionDownOutRt = false
+                    moved = false
+                    Log.d("RT_TOUCH_MV", "New action down")
                     return true
                 } else if (!actionDown) return false //Not action down, then return
 
@@ -389,6 +397,7 @@ class Roulette : View {
                 geom.rotation = (geom.rotation + a) % 360f
                 moveLastPoint = p
                 actionDownOutRt = false
+                moved = true
             }
             else->{ return false }
         }
