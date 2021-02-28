@@ -8,7 +8,7 @@
 
     <Button
         android:id="@+id/button_clearTitle"
-        style="@style/Theme.DecisionMaker"
+        style="@style/Theme.DecisionMaker.TextButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="32dp"
@@ -53,7 +53,7 @@
 
     <Button
         android:id="@+id/button_addOption"
-        style="@style/Theme.DecisionMaker"
+        style="@style/Theme.DecisionMaker.TextButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="32dp"
@@ -79,8 +79,8 @@
         android:id="@+id/floatButton_ready"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="32dp"
-        android:layout_marginBottom="64dp"
+        android:layout_marginEnd="24dp"
+        android:layout_marginBottom="24dp"
         android:clickable="true"
         android:contentDescription="@string/floatButton_ready_desc"
         android:focusable="true"

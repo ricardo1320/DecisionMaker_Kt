@@ -18,6 +18,7 @@ class Roulette : View {
         var paintPalette = ArrayList<Paint>()
         var paintHighlight = Paint(Paint.ANTI_ALIAS_FLAG)
         var paintChooser = Paint(Paint.ANTI_ALIAS_FLAG)
+        var paintForeground = Paint(Paint.ANTI_ALIAS_FLAG)
 
 
         /**
@@ -57,22 +58,24 @@ class Roulette : View {
                 field = value
 
                 diameter = min(value.x, value.y) //Roulette diameter
-                radius = diameter / 2f
-                o = PointF(value.x/2f, value.y/2f) //Origin at the view center
+                outerR = diameter / 2f
+                innerR = 0.96f*outerR
+                o = PointF(value.x/2f, value.y/2f) //Origin at the roulette center
 
                 chooserPath = Path() //Triangle
-                chooserPath.moveTo(o.x + 00f, o.y - radius + 30)
-                chooserPath.lineTo(o.x + 20f, o.y - radius - 50)
-                chooserPath.lineTo(o.x - 20f, o.y - radius - 50)
-                chooserPath.lineTo(o.x + 00f, o.y - radius + 30)
+                chooserPath.moveTo(o.x + 00f, o.y - outerR + 85f)
+                chooserPath.lineTo(o.x + 30f, o.y - outerR + 5f)
+                chooserPath.lineTo(o.x - 30f, o.y - outerR + 5f)
+                chooserPath.lineTo(o.x + 00f, o.y - outerR + 85f)
                 chooserPath.close()
 
                 //Partitions Boxes LT:Left-Top; RB:Right-Bottom
-                arcBoxLT = PointF(o.x - radius, o.y - radius)
-                arcBoxRB = PointF(o.x + radius, o.y + radius)
+                arcBoxLT = PointF(o.x - innerR, o.y - innerR)
+                arcBoxRB = PointF(o.x + innerR, o.y + innerR)
             }
 
-        var radius = 0.5f           //Roulette Radius
+        var innerR = 0.4f           //Roulette inner Radius
+        var outerR = 0.5f
         var diameter = 1f           //Roulette diameter
 
         var scale = 1f              //Scale factor
@@ -96,8 +99,8 @@ class Roulette : View {
             if(n > 1) {
                 for (i in 0 until n) {
                     val t = 0.01745329251 * i * partitionStep // Angle in radians
-                    val lx = radius * cos(t).toFloat() + o.x  // Line end Point.x
-                    val ly = radius * sin(t).toFloat() + o.y  // Line end Point.y
+                    val lx = innerR * cos(t).toFloat() + o.x  // Line end Point.x
+                    val ly = innerR * sin(t).toFloat() + o.y  // Line end Point.y
                     partitionDivisions.add(PointF(lx, ly))
                 }
             }
@@ -146,7 +149,8 @@ class Roulette : View {
         attrs.paintHighlight.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
         attrs.paintHighlight.strokeWidth = 5f
 
-        attrs.paintChooser.color = Color.DKGRAY
+        attrs.paintChooser.color = Color.rgb(8, 99, 191)
+        attrs.paintForeground.color = Color.rgb(8, 99, 191)
 
         tSize = getTextBoxOffset("o").y
     }
@@ -163,17 +167,31 @@ class Roulette : View {
         geom.setPartitions(rouletteOptions.size) //Since partitions depends of size attributes, update them
     }
 
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+        val wSpec = MeasureSpec.getSize(widthMeasureSpec) - (paddingLeft + paddingRight)
+        val hSpec = MeasureSpec.getSize(heightMeasureSpec) - (paddingTop + paddingBottom)
+
+        var wDes = min(wSpec, hSpec)
+        if(!isInEditMode) {
+            setMeasuredDimension(wDes, wDes)
+        }else{
+            setMeasuredDimension(800, 800)
+        }
+    }
+
     /**
      * Overrides View onDraw fxn
      * @param canvas is the surface provided to draw.
      */
     override fun onDraw(canvas: Canvas) {
         canvas.scale(geom.scale, geom.scale, geom.o.x, geom.o.y)
+        canvas.drawCircle(geom.o.x, geom.o.y, geom.outerR, attrs.paintForeground)
 
         if(rouletteOptions.size == 0) { //Empty roulette, draw single circle with advice text
             val t1Off = getTextBoxOffset("Add")
             val t2Off = getTextBoxOffset("choices")
-            canvas.drawCircle(geom.o.x, geom.o.y, geom.radius, attrs.paintPalette[0])
+            canvas.drawCircle(geom.o.x, geom.o.y, geom.innerR, attrs.paintPalette[0])
             canvas.drawText("Add", geom.o.x - t1Off.x, geom.o.y - (t1Off.y*1.5).toInt(), attrs.paintHighlight)
             canvas.drawText("choices", geom.o.x - t2Off.x, geom.o.y + (t2Off.y*1.5).toInt(),  attrs.paintHighlight)
             canvas.drawPath(geom.chooserPath, attrs.paintChooser)
@@ -199,7 +217,7 @@ class Roulette : View {
             //Draw choices text
             canvas.rotate(geom.partitionStep/2, geom.o.x, geom.o.y)
             for (choice in rouletteOptions) {
-                canvas.drawText(choice, geom.o.x + geom.diameter / 8, geom.o.y + tSize, attrs.paintHighlight)
+                canvas.drawText(choice, geom.o.x + geom.innerR / 4, geom.o.y + tSize, attrs.paintHighlight)
                 canvas.rotate(geom.partitionStep, geom.o.x, geom.o.y)
             }
         }else{ //Single choice, draw centered text
@@ -360,7 +378,7 @@ class Roulette : View {
             MotionEvent.ACTION_DOWN->{
                 Log.d("RT_TOUCH_EVT", "DOWN: " + p.x + ", " + p.y)
                 if(animationStarted) return false
-                if((p.length() <= geom.radius) && (p.length() > 1)) { //New action down
+                if((p.length() <= geom.outerR) && (p.length() > 1)) { //New action down
                     moveLastPoint = PointF(p.x, p.y)
                     rotSpeed = 1f
                     actionDown = true
@@ -371,11 +389,11 @@ class Roulette : View {
             MotionEvent.ACTION_MOVE -> {
                 if (animationStarted) return false
 
-                if (p.length() > geom.radius || p.length() < 1f) { //Touch event outside the roulette
+                if (p.length() > geom.outerR || p.length() < 1f) { //Touch event outside the roulette
                     actionDown = false
                     actionDownOutRt = true
                     return false
-                } else if (!actionDown && (p.length() <= geom.radius)) { //New action down event
+                } else if (!actionDown && (p.length() <= geom.outerR)) { //New action down event
                     actionDown = true
                     moveLastPoint = PointF(p.x, p.y)
                     rotSpeed = 1f
