@@ -4,6 +4,7 @@ import android.content.Intent
 import android.graphics.*
 import android.media.MediaPlayer
 import android.net.Uri
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Environment
@@ -20,6 +21,9 @@ import java.io.File
 import java.io.FileOutputStream
 import java.lang.Exception
 import java.net.URLEncoder
+import java.text.SimpleDateFormat
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.math.*
@@ -50,7 +54,7 @@ class MainActivity : AppCompatActivity(), OnRouletteViewListener, View.OnClickLi
         rouletteOptions.add("Tortas")
         rouletteOptions.add("Hot-dogs")
         roulette.setRouletteOptionList(rouletteOptions)
-        textView_title.text ="¿Qué comemos?"
+        textView_title.text = resources.getString(R.string.ROULETTE_INIT_TITLE)
 
         roulette.onRouletteViewListener = this
 
@@ -92,7 +96,7 @@ class MainActivity : AppCompatActivity(), OnRouletteViewListener, View.OnClickLi
             R.id.menu_modify -> {
                 //Launch next activity
                 if(roulette.isAnimationRunning()){
-                    Toast.makeText(this, "Wait until roulette spin completed", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, resources.getString(R.string.UNTIL_SPIN_COMPLETED), Toast.LENGTH_SHORT).show()
                     return false
                 }
                 val intent = Intent(this, OptionsActivity::class.java)
@@ -111,6 +115,7 @@ class MainActivity : AppCompatActivity(), OnRouletteViewListener, View.OnClickLi
         outState.putStringArrayList(OptionsActivity.OPTIONS_ACT_ROULETTE_LIST, roulette.getRouletteOptionList())
         outState.putFloat(MAIN_ACT_ROULETTE_ROTATION, roulette.getRouletteRotation())
         outState.putString(MAIN_ACT_TEXTVIEW_RESULT, textView_result.text.toString())
+        outState.putString(OptionsActivity.OPTIONS_ACT_ROULETTE_TITLE, textView_title.text.toString())
     }
 
     override fun onRestoreInstanceState(savedInstanceState: Bundle) {
@@ -118,6 +123,11 @@ class MainActivity : AppCompatActivity(), OnRouletteViewListener, View.OnClickLi
         roulette.setRouletteRotation(savedInstanceState.getFloat(MAIN_ACT_ROULETTE_ROTATION))
         roulette.setRouletteOptionList(savedInstanceState.getStringArrayList(OptionsActivity.OPTIONS_ACT_ROULETTE_LIST)!!)
         textView_result.text = savedInstanceState.getString(MAIN_ACT_TEXTVIEW_RESULT)
+        textView_title.text = savedInstanceState.getString(OptionsActivity.OPTIONS_ACT_ROULETTE_TITLE)
+        if(textView_result.text.isNotEmpty()){
+            search_button.visibility = View.VISIBLE
+            share_button.visibility = View.VISIBLE
+        }
     }
 
     /**
@@ -164,18 +174,18 @@ class MainActivity : AppCompatActivity(), OnRouletteViewListener, View.OnClickLi
                     sendIntent.setType("image/png")
                     startActivity(sendIntent)*/
                     val sendIntent = Intent(Intent.ACTION_SEND)
-                    sendIntent.putExtra(Intent.EXTRA_TEXT, "Decision Maker: " + textView_result.text + " win!")
+                    sendIntent.putExtra(Intent.EXTRA_TEXT, "Decision Maker [${Utils.getDate()}]\n${textView_title.text}: ${textView_result.text} win!")
                     sendIntent.type = "text/plain"
                     startActivity(Intent.createChooser(sendIntent, null))
 
                 }catch (e:Exception){
-                    Log.d("ERROR", e.toString())
+                    Log.e(TAG, ".onClick: share_button error is ${e.printStackTrace()}")
                 }
 
 
             }
             R.id.search_button->{
-                val gsIntentUri = Uri.parse(String.format("https://www.google.com/search?q=%s", URLEncoder.encode(textView_result.text.toString(), "UTF-8")))
+                val gsIntentUri = Uri.parse(String.format(resources.getString(R.string.URL_GOOGLE), URLEncoder.encode(textView_result.text.toString(), "UTF-8")))
                 val googleSearchIntent = Intent(Intent.ACTION_VIEW, gsIntentUri)
                 startActivity(googleSearchIntent)
             }
@@ -196,7 +206,7 @@ class MainActivity : AppCompatActivity(), OnRouletteViewListener, View.OnClickLi
     }
 
     override fun OnRouletteSpinEvent(speed: Float) {
-        Log.d("ROULETTE SPIN EVT", speed.toString())
+        Log.d(TAG, ".OnRouletteSpinEvent: speed is $speed")
         if(roulette.getRouletteOptionsCount() > 1 && abs(speed) > 0.09f) {
             textView_result.text = resources.getString(R.string.EMPTY_STRING)
             search_button.visibility = View.INVISIBLE

@@ -3,10 +3,17 @@
     <string name="button_spin_text">Spin</string>
     <string name="menu_modify_text">Modify options</string>
     <string name="button_addOption">Add</string>
-    <string name="editText_addOption_hint">Enter option</string>
     <string name="menu_clear">Clear</string>
+    <string name="editText_addOption_hint">Enter option</string>
+    <string name="editText_title_hint">Roulette title</string>
     <string name="floatButton_ready_desc">Commit options</string>
     <string name="button_deleteOption_desc">Delete option</string>
+    <string name="button_search_desc">Search result in Google</string>
+    <string name="button_share_desc">Share result</string>
     <string name="EMPTY_STRING">""</string>
-    <string name="editText_title_hint">Roulette title</string>
+    <string name="ROULETTE_DEFAULT_TITLE">Roulette 1</string>
+    <string name="ROULETTE_INIT_TITLE">¿Qué comemos?</string>
+    <string name="MIN_OPTIONS_CONSTRAINT">At least two options!</string>
+    <string name="UNTIL_SPIN_COMPLETED">Wait until roulette spin completed</string>
+    <string name="URL_GOOGLE">https://www.google.com/search?q=%s</string>
 </resources>

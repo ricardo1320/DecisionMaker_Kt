@@ -1,6 +1,9 @@
 package com.example.decisionmaker
 
 import android.content.Intent
+import android.graphics.Color
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffColorFilter
 import android.os.Bundle
 import android.view.KeyEvent
 import android.view.Menu
@@ -8,6 +11,7 @@ import android.view.MenuItem
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.res.ResourcesCompat
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.android.synthetic.main.activity_options.*
@@ -31,7 +35,7 @@ class OptionsActivity : AppCompatActivity(), View.OnClickListener {
 
         //Adapter
         myAdapter = OptionsAdapter(intent.extras!!.getStringArrayList(OPTIONS_ACT_ROULETTE_LIST)!!)
-        val title = intent.extras!!.getString(OPTIONS_ACT_ROULETTE_TITLE, "")
+        val title = intent.extras!!.getString(OPTIONS_ACT_ROULETTE_TITLE, resources.getString(R.string.EMPTY_STRING))
         if(title.isNotBlank()) editText_RouletteTitle.setText(title)
 
         recyclerView.adapter = myAdapter
@@ -42,8 +46,8 @@ class OptionsActivity : AppCompatActivity(), View.OnClickListener {
         editText_addOption.setOnKeyListener(object:View.OnKeyListener{
             override fun onKey(v: View?, keyCode: Int, event: KeyEvent?): Boolean {
                 if((event?.action == KeyEvent.ACTION_DOWN) && (keyCode == KeyEvent.KEYCODE_ENTER)){
-                    if(editText_addOption.text.isNotEmpty()){
-                        myAdapter.addOption(editText_addOption.text.toString())
+                    if(editText_addOption.text.isNotBlank()){
+                        myAdapter.addOption(editText_addOption.text.trim().toString())
                         editText_addOption.text.clear()
                         editText_addOption.requestFocus()
                         return true
@@ -61,8 +65,8 @@ class OptionsActivity : AppCompatActivity(), View.OnClickListener {
     override fun onClick(v: View) {
         when(v.id){
             R.id.button_addOption -> {
-                if(editText_addOption.text.isNotEmpty()){
-                    myAdapter.addOption(editText_addOption.text.toString())
+                if(editText_addOption.text.isNotBlank()){
+                    myAdapter.addOption(editText_addOption.text.trim().toString())
                     editText_addOption.text.clear()
                 }
             }
@@ -92,6 +96,13 @@ class OptionsActivity : AppCompatActivity(), View.OnClickListener {
     //Menu overridden methods
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.menu_optionsactivity, menu)
+        val menuItem = menu?.findItem(R.id.menu_clear)
+        val icon = ResourcesCompat.getDrawable(resources, R.drawable.outline_delete_black_48, theme)
+        val styledArray = obtainStyledAttributes(R.style.Theme_DecisionMaker_TextButton, intArrayOf(R.attr.backgroundTint))
+        val color = styledArray.getColor(0, Color.CYAN)
+        styledArray.recycle()
+        icon?.colorFilter = PorterDuffColorFilter(color, PorterDuff.Mode.SRC_IN)
+        menuItem?.icon = icon
         return true
     }
 
@@ -109,12 +120,13 @@ class OptionsActivity : AppCompatActivity(), View.OnClickListener {
 
     //Check options are at least two (2)
     private fun checkMinOptions(){
-        if(editText_RouletteTitle.text.isBlank())
-            editText_RouletteTitle.setText("Roulette 1")
         if(myAdapter.itemCount < 2)
-            Toast.makeText(this, "At least two options!", Toast.LENGTH_LONG).show()
-        else
+            Toast.makeText(this, resources.getString(R.string.MIN_OPTIONS_CONSTRAINT), Toast.LENGTH_LONG).show()
+        else{
+            if(editText_RouletteTitle.text.isBlank())
+                editText_RouletteTitle.setText(resources.getString(R.string.ROULETTE_DEFAULT_TITLE))
             setResultAndReturnToActivity()
+        }
     }
 
     /**
@@ -133,7 +145,7 @@ class OptionsActivity : AppCompatActivity(), View.OnClickListener {
     private fun setResultAndReturnToActivity(){
         val result = Intent()
         result.putExtra(OPTIONS_ACT_ROULETTE_LIST, myAdapter.getOptions())
-        result.putExtra(OPTIONS_ACT_ROULETTE_TITLE, editText_RouletteTitle.text.toString())
+        result.putExtra(OPTIONS_ACT_ROULETTE_TITLE, editText_RouletteTitle.text.trim().toString())
         setResult(OPTIONS_ACT_ROULETTE_UPD_OK, result)
         finish()
     }

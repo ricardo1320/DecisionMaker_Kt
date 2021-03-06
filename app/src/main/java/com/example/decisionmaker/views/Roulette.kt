@@ -10,8 +10,13 @@ import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import androidx.core.graphics.toPointF
+import com.example.decisionmaker.R
+import com.google.android.material.color.MaterialColors
 import kotlin.collections.ArrayList
 import kotlin.math.*
+
+//TAG for log
+private const val TAG = "RouletteView"
 
 class Roulette : View {
     private class RouletteAttributes{
@@ -149,8 +154,9 @@ class Roulette : View {
         attrs.paintHighlight.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
         attrs.paintHighlight.strokeWidth = 5f
 
-        attrs.paintChooser.color = Color.rgb(8, 99, 191)
-        attrs.paintForeground.color = Color.rgb(8, 99, 191)
+        attrs.paintChooser.color = MaterialColors.getColor(this, R.attr.colorSecondary)
+        //attrs.paintForeground.color = Color.rgb(8, 99, 191) //blue
+        attrs.paintForeground.color = MaterialColors.getColor(this, R.attr.colorSecondary)
 
         tSize = getTextBoxOffset("o").y
     }
@@ -167,6 +173,11 @@ class Roulette : View {
         geom.setPartitions(rouletteOptions.size) //Since partitions depends of size attributes, update them
     }
 
+    /**
+     * Overrides the onMeasure fxn -> Responsive View
+     * @param widthMeasureSpec is the view width
+     * @param heightMeasureSpec is the view height
+     */
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
         val wSpec = MeasureSpec.getSize(widthMeasureSpec) - (paddingLeft + paddingRight)
@@ -291,7 +302,7 @@ class Roulette : View {
             val idx = getRouletteIndex()    //Get roulette index
 
             //Call spin completed listener with the idx and choice values as parameters
-            Log.d("SPINCOMPLETED", idx.toString() + " " + rouletteOptions[idx])
+            Log.d(TAG, ".onAnimationEnd: SPINCOMPLETED $idx ${rouletteOptions[idx]}")
             onRouletteViewListener?.OnRouletteSpinCompleted(idx,rouletteOptions[idx])
         }
         override fun onAnimationStart(animation: Animator?) {}
@@ -376,7 +387,7 @@ class Roulette : View {
                 return false
             }
             MotionEvent.ACTION_DOWN->{
-                Log.d("RT_TOUCH_EVT", "DOWN: " + p.x + ", " + p.y)
+                Log.d(TAG, ".onTouchEvent: RT_TOUCH_EVT: DOWN: ${p.x}, ${p.y}")
                 if(animationStarted) return false
                 if((p.length() <= geom.outerR) && (p.length() > 1)) { //New action down
                     moveLastPoint = PointF(p.x, p.y)
@@ -400,7 +411,7 @@ class Roulette : View {
                     tStart = System.currentTimeMillis()
                     actionDownOutRt = false
                     moved = false
-                    Log.d("RT_TOUCH_MV", "New action down")
+                    Log.d(TAG, ".onTouchEvent: RT_TOUCH_MV: New action down")
                     return true
                 } else if (!actionDown) return false //Not action down, then return
 
