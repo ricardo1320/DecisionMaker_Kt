@@ -9,15 +9,15 @@ App to make decisions with a funny roulette.
 
 Spin the roulette and get a random option!
 
-<img src="/results/screenshot_1.png" width="260">&emsp;<img src="/results/screenshot_2.png" width="260">
+<img src="/results/Screenshot_1.png" width="260">&emsp;<img src="/results/Screenshot_2.png" width="260">
 
 Save your roulettes templates! Add or edit a roulette too ;)
 
-<img src="/results/screenshot_3.png" width="260">&emsp;<img src="/results/screenshot_4.png" width="260">&emsp;<img src="/results/screenshot_5.png" width="260">
+<img src="/results/Screenshot_3.png" width="260">&emsp;<img src="/results/Screenshot_4.png" width="260">&emsp;<img src="/results/Screenshot_5.png" width="260">
 
 Landscape:
 
-<img src="/results/screenshot_6.png" height="260">&emsp;<img src="/results/screenshot_7.png" height="260">
+<img src="/results/Screenshot_6.png" height="260">&emsp;<img src="/results/Screenshot_7.png" height="260">
 
 ## License
 ```
