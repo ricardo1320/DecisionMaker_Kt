@@ -3,9 +3,10 @@
     xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
-        android:id="@+id/menu_clear"
-        android:icon="@drawable/ic_delete"
+        android:id="@+id/menuRoulettes_add"
+        android:icon="@drawable/ic_add"
         style="@style/Theme.DecisionMaker.IconTint"
-        android:title="@string/menu_clear"
+        android:title="@string/menu_title_add"
+        android:visible="true"
         app:showAsAction="always" />
 </menu>

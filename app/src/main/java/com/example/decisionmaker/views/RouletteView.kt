@@ -18,7 +18,7 @@ import kotlin.math.*
 //TAG for log
 private const val TAG = "RouletteView"
 
-class Roulette : View {
+class RouletteView : View {
     private class RouletteAttributes{
         var paintPalette = ArrayList<Paint>()
         var paintHighlight = Paint(Paint.ANTI_ALIAS_FLAG)

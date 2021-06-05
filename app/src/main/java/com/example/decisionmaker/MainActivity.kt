@@ -1,29 +1,27 @@
 package com.example.decisionmaker
 
+import android.content.Context
 import android.content.Intent
 import android.graphics.*
 import android.media.MediaPlayer
 import android.net.Uri
-import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.os.Environment
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.Toast
-import androidx.core.content.FileProvider
 import androidx.core.content.res.ResourcesCompat
+import androidx.fragment.app.Fragment
 import com.example.decisionmaker.views.OnRouletteViewListener
+import com.google.gson.GsonBuilder
 import kotlinx.android.synthetic.main.activity_main.*
-import java.io.File
-import java.io.FileOutputStream
+import kotlinx.android.synthetic.main.activity_main.fragment_container_view
+import kotlinx.android.synthetic.main.activity_my_roulettes.*
+import kotlinx.android.synthetic.main.content_my_roulettes.*
 import java.lang.Exception
 import java.net.URLEncoder
-import java.text.SimpleDateFormat
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.math.*
@@ -32,77 +30,80 @@ import kotlin.random.Random
 //Tag for LOG
 private const val TAG = "MainActivity"
 
-class MainActivity : AppCompatActivity(), OnRouletteViewListener, View.OnClickListener {
+//Constants for saving values in Shared Preferences
+const val GLOBAL_ROULETTE = "GlobalRoulette"
+const val GLOBAL_ROULETTE_LIST = "GlobalRouletteList"
+const val PREFERENCES_FILE = "PreferencesFile"
+
+class MainActivity : AppCompatActivity(), OnRouletteViewListener, View.OnClickListener, AddEditFragment.OnSaveClicked {
     var mp:MediaPlayer? = null
     var sd = 0
 
+    private lateinit var mainRoulette: Roulette
+
     companion object{
-        const val ROULETTE_OPTIONS_REQUEST_CODE = 10
         const val MAIN_ACT_ROULETTE_ROTATION: String = "ROULETTE_ROTATION"
         const val MAIN_ACT_TEXTVIEW_RESULT: String = "TEXTVIEW_RESULT"
+        const val OPTIONS_ACT_ROULETTE_LIST:String = "ROULETTE_LIST"
+        const val OPTIONS_ACT_ROULETTE_TITLE:String = "ROULETTE_TITLE"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        //Get roulette from SharedPreferences or the default roulette
+        mainRoulette = getRoulette()
 
-        val rouletteOptions:ArrayList<String> = ArrayList()
-        rouletteOptions.add("Tacos")
-        rouletteOptions.add("Pizza")
-        rouletteOptions.add("Sushi")
-        rouletteOptions.add("Tortas")
-        rouletteOptions.add("Hot-dogs")
-        roulette.setRouletteOptionList(rouletteOptions)
-        textView_title.text = resources.getString(R.string.ROULETTE_INIT_TITLE)
+        //Set the values from roulette object
+        roulette.setRouletteOptionList(mainRoulette.options)
+        textView_title.text = mainRoulette.name
 
         roulette.onRouletteViewListener = this
 
         button_spin.setOnClickListener(this)
         search_button.setOnClickListener(this)
         share_button.setOnClickListener(this)
+
         mp = MediaPlayer.create(this@MainActivity, R.raw.pop2)
         sd = (mp?.duration!!/1.5).toInt()
+    }
 
-        //Listener to clearFocus on editText_title, after user modifies the Title
-        /*textView_title.setOnEditorActionListener { view, actionId, event ->
-            when(actionId){
-                EditorInfo.IME_ACTION_DONE -> {
-                    val inputMethodManager = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
-                    inputMethodManager.hideSoftInputFromWindow(view.windowToken, 0)
-                    textView_title.clearFocus()
-                    true
-                }
-                else -> false
-            }
-        }*/
+    override fun onRestart() {
+        super.onRestart()
+        Log.d(TAG, "onRestart: starts")
+
+        //Clean screen, when coming back from MyRoulettesActivity
+        textView_result.text = resources.getString(R.string.EMPTY_STRING)
+        search_button.visibility = View.INVISIBLE
+        share_button.visibility = View.INVISIBLE
+        roulette.setRouletteRotation(0f)
     }
 
     //Menu overridden methods
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.menu, menu)
-        val menuItem = menu?.findItem(R.id.menu_modify)
-        val icon = ResourcesCompat.getDrawable(resources, R.drawable.ic_action_edit, theme)
-        val styledArray = obtainStyledAttributes(R.style.Theme_DecisionMaker_TextButton, intArrayOf(R.attr.backgroundTint))
-        val color = styledArray.getColor(0, Color.CYAN)
-        styledArray.recycle()
-        icon?.colorFilter = PorterDuffColorFilter(color, PorterDuff.Mode.SRC_IN)
-        menuItem?.icon = icon
         return true
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.menu_modify -> {
+                //Launch AddEditFragment
+                if(roulette.isAnimationRunning()){
+                    Toast.makeText(this, resources.getString(R.string.UNTIL_SPIN_COMPLETED), Toast.LENGTH_SHORT).show()
+                    return false
+                }
+                rouletteEditRequest(mainRoulette)
+                true
+            }
+            R.id.menumain_showRoulettes -> {
                 //Launch next activity
                 if(roulette.isAnimationRunning()){
                     Toast.makeText(this, resources.getString(R.string.UNTIL_SPIN_COMPLETED), Toast.LENGTH_SHORT).show()
                     return false
                 }
-                val intent = Intent(this, OptionsActivity::class.java)
-                intent.putExtra(OptionsActivity.OPTIONS_ACT_ROULETTE_LIST, roulette.getRouletteOptionList())
-                intent.putExtra(OptionsActivity.OPTIONS_ACT_ROULETTE_TITLE, textView_title.text.toString())
-                startActivityForResult(intent, ROULETTE_OPTIONS_REQUEST_CODE)
+                startActivity(Intent(this, MyRoulettesActivity::class.java))
                 true
             }
             else -> super.onOptionsItemSelected(item)
@@ -112,41 +113,100 @@ class MainActivity : AppCompatActivity(), OnRouletteViewListener, View.OnClickLi
     //Manage screen orientation changes
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        outState.putStringArrayList(OptionsActivity.OPTIONS_ACT_ROULETTE_LIST, roulette.getRouletteOptionList())
+        outState.putStringArrayList(OPTIONS_ACT_ROULETTE_LIST, roulette.getRouletteOptionList())
         outState.putFloat(MAIN_ACT_ROULETTE_ROTATION, roulette.getRouletteRotation())
         outState.putString(MAIN_ACT_TEXTVIEW_RESULT, textView_result.text.toString())
-        outState.putString(OptionsActivity.OPTIONS_ACT_ROULETTE_TITLE, textView_title.text.toString())
+        outState.putString(OPTIONS_ACT_ROULETTE_TITLE, textView_title.text.toString())
     }
 
     override fun onRestoreInstanceState(savedInstanceState: Bundle) {
         super.onRestoreInstanceState(savedInstanceState)
         roulette.setRouletteRotation(savedInstanceState.getFloat(MAIN_ACT_ROULETTE_ROTATION))
-        roulette.setRouletteOptionList(savedInstanceState.getStringArrayList(OptionsActivity.OPTIONS_ACT_ROULETTE_LIST)!!)
+        roulette.setRouletteOptionList(savedInstanceState.getStringArrayList(OPTIONS_ACT_ROULETTE_LIST)!!)
         textView_result.text = savedInstanceState.getString(MAIN_ACT_TEXTVIEW_RESULT)
-        textView_title.text = savedInstanceState.getString(OptionsActivity.OPTIONS_ACT_ROULETTE_TITLE)
-        if(textView_result.text.isNotEmpty()){
+        textView_title.text = savedInstanceState.getString(OPTIONS_ACT_ROULETTE_TITLE)
+        if (textView_result.text.isNotEmpty()) {
             search_button.visibility = View.VISIBLE
             share_button.visibility = View.VISIBLE
         }
+
+        if( (supportFragmentManager.findFragmentById(R.id.fragment_container_view)) != null){
+            showEditFragment()
+        }
     }
 
-    /**
-     * Get Activity Result
-     */
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        when(requestCode){
-            ROULETTE_OPTIONS_REQUEST_CODE -> {                                  //Check for OptionsActivity result
-                if(resultCode == OptionsActivity.OPTIONS_ACT_ROULETTE_UPD_OK){  //Roulette option list updated correctly
-                    roulette.setRouletteOptionList(data?.getStringArrayListExtra(OptionsActivity.OPTIONS_ACT_ROULETTE_LIST)!!)
-                    textView_title.text = data.getStringExtra(OptionsActivity.OPTIONS_ACT_ROULETTE_TITLE)
-                    textView_result.text = resources.getString(R.string.EMPTY_STRING)
-                    search_button.visibility = View.INVISIBLE
-                    share_button.visibility = View.INVISIBLE
-                    roulette.setRouletteRotation(0f)
-                }
-            }
+    //On resume, re-read and re-set the global roulette from SharedPreferences
+    override fun onResume() {
+        Log.d(TAG, "onResume: starts")
+        super.onResume()
+
+        mainRoulette = getRoulette()
+        Log.d(TAG, "onResume: roulette is $mainRoulette")
+        //Set the values from roulette object
+        roulette.setRouletteOptionList(mainRoulette.options)
+        textView_title.text = mainRoulette.name
+    }
+
+    //Function to get Global Roulette from SharedPreferences
+    private fun getRoulette(): Roulette {
+        val sharedPref = application.getSharedPreferences(PREFERENCES_FILE, Context.MODE_PRIVATE)
+        val jsonString = sharedPref.getString(GLOBAL_ROULETTE, null)
+
+        return if (jsonString != null) {
+            GsonBuilder().create().fromJson(jsonString, Roulette::class.java)
+        } else {
+            getDefaultRoulette()
         }
-        super.onActivityResult(requestCode, resultCode, data)
+    }
+
+    //Function to build default roulette (just the first time the app is installed)
+    private fun getDefaultRoulette(): Roulette{
+        //Build options list
+        val rouletteOptions:ArrayList<String> = ArrayList()
+        rouletteOptions.add("Tacos")
+        rouletteOptions.add("Pizza")
+        rouletteOptions.add("Sushi")
+        rouletteOptions.add("Burger")
+        rouletteOptions.add("Hot-dogs")
+
+        //Return Roulette object
+        return Roulette(resources.getString(R.string.ROULETTE_INIT_TITLE), rouletteOptions)
+    }
+
+    private fun rouletteEditRequest(roulette: Roulette){
+        Log.d(TAG, "rouletteEditRequest: starts")
+
+        //Create a new fragment to edit the Roulette
+        val newFragment = AddEditFragment.newInstance(roulette)
+        supportFragmentManager.beginTransaction().add(R.id.fragment_container_view, newFragment).commit()
+
+        showEditFragment()
+        Log.d(TAG, "Exiting rouletteEditRequest")
+    }
+
+    private fun showEditFragment(){
+        fragment_container_view.visibility = View.VISIBLE
+        roulette.visibility = View.GONE
+        button_spin.visibility = View.GONE
+        textView_result.visibility = View.GONE
+        textView_title.visibility = View.GONE
+        share_button.visibility = View.GONE
+        search_button.visibility = View.GONE
+    }
+
+    private fun removeEditFragment(fragment: Fragment?){
+        if(fragment != null) {
+            supportFragmentManager.beginTransaction().remove(fragment).commit()
+        }
+
+        fragment_container_view.visibility = View.GONE
+        roulette.visibility = View.VISIBLE
+        button_spin.visibility = View.VISIBLE
+        textView_title.visibility = View.VISIBLE
+        textView_result.visibility = View.VISIBLE
+        share_button.visibility = View.INVISIBLE
+        search_button.visibility = View.INVISIBLE
+        roulette.setRouletteRotation(0f)
     }
 
     override fun onClick(v: View) {
@@ -181,8 +241,6 @@ class MainActivity : AppCompatActivity(), OnRouletteViewListener, View.OnClickLi
                 }catch (e:Exception){
                     Log.e(TAG, ".onClick: share_button error is ${e.printStackTrace()}")
                 }
-
-
             }
             R.id.search_button->{
                 val gsIntentUri = Uri.parse(String.format(resources.getString(R.string.URL_GOOGLE), URLEncoder.encode(textView_result.text.toString(), "UTF-8")))
@@ -229,5 +287,30 @@ class MainActivity : AppCompatActivity(), OnRouletteViewListener, View.OnClickLi
         mp?.start()
     }
 
+    //Callback function from AddEditFragment
+    override fun onSaveClicked() {
+        Log.d(TAG, "onSaveClicked: starts")
+        mainRoulette = getRoulette()
+        //Set the values from roulette object
+        roulette.setRouletteOptionList(mainRoulette.options)
+        textView_title.text = mainRoulette.name
+
+        textView_result.text = resources.getString(R.string.EMPTY_STRING)
+
+        removeEditFragment(supportFragmentManager.findFragmentById(R.id.fragment_container_view))
+    }
+
+    /**
+     * Detect back key pressed and disable it, when Fragment on screen.
+     * (avoid problems)
+     */
+    override fun onBackPressed() {
+        val fragment = supportFragmentManager.findFragmentById(R.id.fragment_container_view)
+        if(fragment == null){
+            super.onBackPressed()
+        }else{
+            Log.d(TAG, "Back pressed with fragment on screen")
+        }
+    }
 
 }

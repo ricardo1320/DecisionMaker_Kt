@@ -12,8 +12,13 @@
     <string name="button_share_desc">Share result</string>
     <string name="EMPTY_STRING">""</string>
     <string name="ROULETTE_DEFAULT_TITLE">Roulette 1</string>
-    <string name="ROULETTE_INIT_TITLE">¿Qué comemos?</string>
+    <string name="ROULETTE_INIT_TITLE">What to eat today?</string>
     <string name="MIN_OPTIONS_CONSTRAINT">At least two options!</string>
     <string name="UNTIL_SPIN_COMPLETED">Wait until roulette spin completed</string>
     <string name="URL_GOOGLE">https://www.google.com/search?q=%s</string>
+    <string name="title_activity_my_roulettes">My Roulettes</string>
+    <string name="menutitle_showRoulettes">My Roulettes</string>
+    <string name="menu_title_add">Add</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

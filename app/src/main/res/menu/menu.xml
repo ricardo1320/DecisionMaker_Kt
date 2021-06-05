@@ -4,6 +4,13 @@
     <item
         android:id="@+id/menu_modify"
         android:icon="@drawable/ic_action_edit"
+        style="@style/Theme.DecisionMaker.IconTint"
         android:title="@string/menu_modify_text"
         app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/menumain_showRoulettes"
+        android:icon="@drawable/ic_menu"
+        style="@style/Theme.DecisionMaker.IconTint"
+        android:title="@string/menutitle_showRoulettes"
+        app:showAsAction="always" />
 </menu>
