@@ -17,7 +17,7 @@ Save your roulettes templates! Add or edit a roulette too ;)
 
 Landscape:
 
-<img src="/results/screenshot_6.png" width="260">&emsp;<img src="/results/screenshot_7.png" width="260">
+<img src="/results/screenshot_6.png" height="260">&emsp;<img src="/results/screenshot_7.png" height="260">
 
 ## License
 ```
