@@ -8,8 +8,8 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.decisionmaker.databinding.FragmentAddEditBinding
 import com.google.gson.GsonBuilder
-import kotlinx.android.synthetic.main.fragment_add_edit.*
 
 private const val TAG = "AddEditFragment"
 
@@ -33,6 +33,11 @@ class AddEditFragment : Fragment(), View.OnClickListener {
     //View Model
     private val viewModel: MyRoulettesViewModel by activityViewModels()
 
+    //View binding
+    private var _binding: FragmentAddEditBinding? = null
+    //This property is only valid between onCreateView and onDestroyView
+    private val binding get() = _binding!!
+
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.d(TAG, "onCreate: starts")
         super.onCreate(savedInstanceState)
@@ -45,9 +50,10 @@ class AddEditFragment : Fragment(), View.OnClickListener {
         setHasOptionsMenu(true)
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         Log.d(TAG, "onCreateView: starts")
-        return inflater.inflate(R.layout.fragment_add_edit, container, false)
+        _binding = FragmentAddEditBinding.inflate(inflater, container, false)
+        return binding.root
     }
 
     //If editing a roulette -> populate the widgets with the details. If not -> add a new roulette
@@ -60,24 +66,24 @@ class AddEditFragment : Fragment(), View.OnClickListener {
         //Editing a roulette
         if(roulette != null){
             Log.d(TAG, "onViewCreated: Roulette details found, editing roulette -> $roulette")
-            editText_RouletteTitle.setText(roulette.name)
+            binding.editTextRouletteTitle.setText(roulette.name)
             optionList = roulette.options
         }else{
             //Adding a new roulette
             Log.d(TAG, "onViewCreated: No arguments, adding new roulette")
         }
 
-        options_recyclerView.layoutManager = LinearLayoutManager(context)
         optionsAdapter = OptionsAdapter(optionList)
-        options_recyclerView.adapter = optionsAdapter
+        binding.optionsRecyclerView.layoutManager = LinearLayoutManager(context)
+        binding.optionsRecyclerView.adapter = optionsAdapter
 
-        editText_addOption.setOnKeyListener(object:View.OnKeyListener{
+        binding.editTextAddOption.setOnKeyListener(object:View.OnKeyListener{
             override fun onKey(v: View?, keyCode: Int, event: KeyEvent?): Boolean {
                 if((event?.action == KeyEvent.ACTION_DOWN) && (keyCode == KeyEvent.KEYCODE_ENTER)){
-                    if(editText_addOption.text.isNotBlank()){
-                        optionsAdapter.addOption(editText_addOption.text.trim().toString())
-                        editText_addOption.text.clear()
-                        editText_addOption.requestFocus()
+                    if(binding.editTextAddOption.text.isNotBlank()){
+                        optionsAdapter.addOption(binding.editTextAddOption.text.trim().toString())
+                        binding.editTextAddOption.text.clear()
+                        binding.editTextAddOption.requestFocus()
                         return true
                     }
                 }
@@ -85,9 +91,9 @@ class AddEditFragment : Fragment(), View.OnClickListener {
             }
         })
 
-        button_addOption.setOnClickListener(this)
-        button_clearTitle.setOnClickListener(this)
-        floatButton_ready.setOnClickListener(this)
+        binding.buttonAddOption.setOnClickListener(this)
+        binding.buttonClearTitle.setOnClickListener(this)
+        binding.floatButtonReady.setOnClickListener(this)
     }
 
     //Clear the menu
@@ -99,13 +105,13 @@ class AddEditFragment : Fragment(), View.OnClickListener {
     override fun onClick(v: View) {
         when(v.id){
             R.id.button_addOption -> {
-                if(editText_addOption.text.isNotBlank()){
-                    optionsAdapter.addOption(editText_addOption.text.trim().toString())
-                    editText_addOption.text.clear()
+                if(binding.editTextAddOption.text.isNotBlank()){
+                    optionsAdapter.addOption(binding.editTextAddOption.text.trim().toString())
+                    binding.editTextAddOption.text.clear()
                 }
             }
             R.id.button_clearTitle -> {
-                editText_RouletteTitle.text.clear()
+                binding.editTextRouletteTitle.text.clear()
             }
             R.id.floatButton_ready -> {
                 //Go back to Activity and update the Roulette List, if the option list has at least 2 elements
@@ -141,7 +147,7 @@ class AddEditFragment : Fragment(), View.OnClickListener {
     private fun rouletteFromUI(): Roulette {
         //Get options list
         val optionList = optionsAdapter.getOptions()
-        return Roulette(editText_RouletteTitle.text.toString(), optionList)
+        return Roulette(binding.editTextRouletteTitle.text.toString(), optionList)
     }
 
     //Check options are at least two (2)
@@ -149,8 +155,8 @@ class AddEditFragment : Fragment(), View.OnClickListener {
         if(optionsAdapter.itemCount < 2)
             Toast.makeText(activity, resources.getString(R.string.MIN_OPTIONS_CONSTRAINT), Toast.LENGTH_LONG).show()
         else{
-            if(editText_RouletteTitle.text.isBlank())
-                editText_RouletteTitle.setText(resources.getString(R.string.ROULETTE_DEFAULT_TITLE))
+            if(binding.editTextRouletteTitle.text.isBlank())
+                binding.editTextRouletteTitle.setText(resources.getString(R.string.ROULETTE_DEFAULT_TITLE))
             //TODO save in database
             saveRoulette()  //Save in the list of the view model
             listener?.onSaveClicked()
@@ -175,6 +181,11 @@ class AddEditFragment : Fragment(), View.OnClickListener {
         listener = null
     }
 
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+
     /**
      * This interface must be implemented by activities that contain this
      * fragment to allow an interaction in this fragment to be communicated
@@ -193,7 +204,6 @@ class AddEditFragment : Fragment(), View.OnClickListener {
          * @param roulette The roulette to be edited, or null to add a new roulette.
          * @return A new instance of fragment AddEditFragment.
          */
-        // TODO: Rename and change types and number of parameters
         @JvmStatic
         fun newInstance(roulette: Roulette?) =
             AddEditFragment().apply {

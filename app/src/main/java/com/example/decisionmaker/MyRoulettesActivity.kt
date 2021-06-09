@@ -12,14 +12,12 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.decisionmaker.databinding.ActivityMyRoulettesBinding
-import kotlinx.android.synthetic.main.activity_my_roulettes.*
-import kotlinx.android.synthetic.main.content_my_roulettes.*
 
 private const val TAG = "MyRoulettesActivity"
 
 class MyRoulettesActivity : AppCompatActivity(), AddEditFragment.OnSaveClicked, RoulettesAdapter.OnRouletteClickListener {
 
-    //Variable for data binding
+    //Variable for view binding
     private lateinit var binding: ActivityMyRoulettesBinding
 
     //Variable to hold the adapter
@@ -45,8 +43,8 @@ class MyRoulettesActivity : AppCompatActivity(), AddEditFragment.OnSaveClicked, 
         viewModel.rouletteList.observe(this, {rouletteList -> roulettesAdapter.swapList(rouletteList)})
 
         //Initialise the adapter and associated it with the RecyclerView
-        roulette_list.layoutManager = LinearLayoutManager(this)
-        roulette_list.adapter = roulettesAdapter
+        binding.rouletteList.layoutManager = LinearLayoutManager(this)
+        binding.rouletteList.adapter = roulettesAdapter
 
         //Implementing deleting by swapping
         //Create an IteTouchHelper object and attach it to the recycler view
@@ -65,7 +63,7 @@ class MyRoulettesActivity : AppCompatActivity(), AddEditFragment.OnSaveClicked, 
                 }
             }
         )
-        itemTouchHelper.attachToRecyclerView(roulette_list)
+        itemTouchHelper.attachToRecyclerView(binding.rouletteList)
 
     }
 
@@ -87,8 +85,8 @@ class MyRoulettesActivity : AppCompatActivity(), AddEditFragment.OnSaveClicked, 
     }
 
     private fun showEditFragment(){
-        fragment_container_view.visibility = View.VISIBLE
-        roulette_list.visibility = View.GONE
+        binding.fragmentContainerView.visibility = View.VISIBLE
+        binding.rouletteList.visibility = View.GONE
         supportActionBar?.setDisplayHomeAsUpEnabled(false)
     }
 
@@ -96,8 +94,8 @@ class MyRoulettesActivity : AppCompatActivity(), AddEditFragment.OnSaveClicked, 
         if(fragment != null){
             supportFragmentManager.beginTransaction().remove(fragment).commit()
         }
-        fragment_container_view.visibility = View.GONE
-        roulette_list.visibility = View.VISIBLE
+        binding.fragmentContainerView.visibility = View.GONE
+        binding.rouletteList.visibility = View.VISIBLE
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
     }
 

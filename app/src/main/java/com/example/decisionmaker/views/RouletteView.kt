@@ -255,6 +255,8 @@ class RouletteView : View {
         return animationStarted
     }
 
+    private lateinit var animator: ValueAnimator
+
     /**
      * Start spin animation
      * @param ms is the animation duration in milliseconds
@@ -264,7 +266,7 @@ class RouletteView : View {
             animationStarted = true
             val tEnd = ms / 1000f
             ValueAnimator.setFrameDelay(50)
-            val animator = ValueAnimator.ofFloat(0f, tEnd)
+            animator = ValueAnimator.ofFloat(0f, tEnd)
             //val k = 1/(speed*speed)
 
             animator.duration = ms
@@ -287,23 +289,35 @@ class RouletteView : View {
     }
 
     /**
+     * Stop spin animation
+     */
+    fun stopSpinning(){
+        if(animationStarted){
+            animationStarted = false
+            animator.cancel()
+        }
+    }
+
+    /**
      * Spin animation listener, implements the onAnimationEnd listener
      */
     private val spinAnimationListener = object:Animator.AnimatorListener{
         override fun onAnimationEnd(animation: Animator?) {
-            animationStarted = false                //Free flag for starting another animation process
-            if (rouletteOptions.size == 0) return    //Empty roulette
-            if (rouletteOptions.size == 1) {          //Only one option, choose it
-                onRouletteViewListener?.OnRouletteSpinCompleted(0, rouletteOptions[0])
-                return
+            if(animationStarted) {
+                animationStarted = false                //Free flag for starting another animation process
+                if (rouletteOptions.size == 0) return    //Empty roulette
+                if (rouletteOptions.size == 1) {          //Only one option, choose it
+                    onRouletteViewListener?.OnRouletteSpinCompleted(0, rouletteOptions[0])
+                    return
+                }
+
+                geom.rotation %= 360f           //Assert 0° ≤ rotation ≤ 360°
+                val idx = getRouletteIndex()    //Get roulette index
+
+                //Call spin completed listener with the idx and choice values as parameters
+                Log.d(TAG, ".onAnimationEnd: SPINCOMPLETED $idx ${rouletteOptions[idx]}")
+                onRouletteViewListener?.OnRouletteSpinCompleted(idx, rouletteOptions[idx])
             }
-
-            geom.rotation %= 360f           //Assert 0° ≤ rotation ≤ 360°
-            val idx = getRouletteIndex()    //Get roulette index
-
-            //Call spin completed listener with the idx and choice values as parameters
-            Log.d(TAG, ".onAnimationEnd: SPINCOMPLETED $idx ${rouletteOptions[idx]}")
-            onRouletteViewListener?.OnRouletteSpinCompleted(idx,rouletteOptions[idx])
         }
         override fun onAnimationStart(animation: Animator?) {}
         override fun onAnimationCancel(animation: Animator?) {}

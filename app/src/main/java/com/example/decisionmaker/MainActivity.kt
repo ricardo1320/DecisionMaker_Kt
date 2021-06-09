@@ -12,14 +12,10 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.Toast
-import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.Fragment
+import com.example.decisionmaker.databinding.ActivityMainBinding
 import com.example.decisionmaker.views.OnRouletteViewListener
 import com.google.gson.GsonBuilder
-import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.android.synthetic.main.activity_main.fragment_container_view
-import kotlinx.android.synthetic.main.activity_my_roulettes.*
-import kotlinx.android.synthetic.main.content_my_roulettes.*
 import java.lang.Exception
 import java.net.URLEncoder
 import java.util.*
@@ -30,40 +26,52 @@ import kotlin.random.Random
 //Tag for LOG
 private const val TAG = "MainActivity"
 
+//Constants for saving state
+private const val MAIN_ACT_ROULETTE_ROTATION = "ROULETTE_ROTATION"
+private const val MAIN_ACT_TEXTVIEW_RESULT = "TEXTVIEW_RESULT"
+private const val OPTIONS_ACT_ROULETTE_LIST = "ROULETTE_LIST"
+private const val OPTIONS_ACT_ROULETTE_TITLE = "ROULETTE_TITLE"
+
 //Constants for saving values in Shared Preferences
 const val GLOBAL_ROULETTE = "GlobalRoulette"
 const val GLOBAL_ROULETTE_LIST = "GlobalRouletteList"
 const val PREFERENCES_FILE = "PreferencesFile"
 
 class MainActivity : AppCompatActivity(), OnRouletteViewListener, View.OnClickListener, AddEditFragment.OnSaveClicked {
-    var mp:MediaPlayer? = null
-    var sd = 0
+    private var mp:MediaPlayer? = null
+    private var sd = 0
 
     private lateinit var mainRoulette: Roulette
 
-    companion object{
-        const val MAIN_ACT_ROULETTE_ROTATION: String = "ROULETTE_ROTATION"
-        const val MAIN_ACT_TEXTVIEW_RESULT: String = "TEXTVIEW_RESULT"
-        const val OPTIONS_ACT_ROULETTE_LIST:String = "ROULETTE_LIST"
-        const val OPTIONS_ACT_ROULETTE_TITLE:String = "ROULETTE_TITLE"
-    }
+    //Variable for view binding
+    private lateinit var binding: ActivityMainBinding
+
+//    companion object{
+//        const val MAIN_ACT_ROULETTE_ROTATION: String = "ROULETTE_ROTATION"
+//        const val MAIN_ACT_TEXTVIEW_RESULT: String = "TEXTVIEW_RESULT"
+//        const val OPTIONS_ACT_ROULETTE_LIST:String = "ROULETTE_LIST"
+//        const val OPTIONS_ACT_ROULETTE_TITLE:String = "ROULETTE_TITLE"
+//    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        Log.d(TAG, "onCreate: starts")
+
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         //Get roulette from SharedPreferences or the default roulette
         mainRoulette = getRoulette()
 
         //Set the values from roulette object
-        roulette.setRouletteOptionList(mainRoulette.options)
-        textView_title.text = mainRoulette.name
+        binding.roulette.setRouletteOptionList(mainRoulette.options)
+        binding.textViewTitle.text = mainRoulette.name
 
-        roulette.onRouletteViewListener = this
+        binding.roulette.onRouletteViewListener = this
 
-        button_spin.setOnClickListener(this)
-        search_button.setOnClickListener(this)
-        share_button.setOnClickListener(this)
+        binding.buttonSpin.setOnClickListener(this)
+        binding.searchButton.setOnClickListener(this)
+        binding.shareButton.setOnClickListener(this)
 
         mp = MediaPlayer.create(this@MainActivity, R.raw.pop2)
         sd = (mp?.duration!!/1.5).toInt()
@@ -74,10 +82,10 @@ class MainActivity : AppCompatActivity(), OnRouletteViewListener, View.OnClickLi
         Log.d(TAG, "onRestart: starts")
 
         //Clean screen, when coming back from MyRoulettesActivity
-        textView_result.text = resources.getString(R.string.EMPTY_STRING)
-        search_button.visibility = View.INVISIBLE
-        share_button.visibility = View.INVISIBLE
-        roulette.setRouletteRotation(0f)
+        binding.textViewResult.text = resources.getString(R.string.EMPTY_STRING)
+        binding.searchButton.visibility = View.INVISIBLE
+        binding.shareButton.visibility = View.INVISIBLE
+        binding.roulette.setRouletteRotation(0f)
     }
 
     //Menu overridden methods
@@ -90,7 +98,7 @@ class MainActivity : AppCompatActivity(), OnRouletteViewListener, View.OnClickLi
         return when (item.itemId) {
             R.id.menu_modify -> {
                 //Launch AddEditFragment
-                if(roulette.isAnimationRunning()){
+                if(binding.roulette.isAnimationRunning()){
                     Toast.makeText(this, resources.getString(R.string.UNTIL_SPIN_COMPLETED), Toast.LENGTH_SHORT).show()
                     return false
                 }
@@ -99,7 +107,7 @@ class MainActivity : AppCompatActivity(), OnRouletteViewListener, View.OnClickLi
             }
             R.id.menumain_showRoulettes -> {
                 //Launch next activity
-                if(roulette.isAnimationRunning()){
+                if(binding.roulette.isAnimationRunning()){
                     Toast.makeText(this, resources.getString(R.string.UNTIL_SPIN_COMPLETED), Toast.LENGTH_SHORT).show()
                     return false
                 }
@@ -113,21 +121,28 @@ class MainActivity : AppCompatActivity(), OnRouletteViewListener, View.OnClickLi
     //Manage screen orientation changes
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        outState.putStringArrayList(OPTIONS_ACT_ROULETTE_LIST, roulette.getRouletteOptionList())
-        outState.putFloat(MAIN_ACT_ROULETTE_ROTATION, roulette.getRouletteRotation())
-        outState.putString(MAIN_ACT_TEXTVIEW_RESULT, textView_result.text.toString())
-        outState.putString(OPTIONS_ACT_ROULETTE_TITLE, textView_title.text.toString())
+        outState.putStringArrayList(OPTIONS_ACT_ROULETTE_LIST, binding.roulette.getRouletteOptionList())
+        outState.putString(MAIN_ACT_TEXTVIEW_RESULT, binding.textViewResult.text.toString())
+        outState.putString(OPTIONS_ACT_ROULETTE_TITLE, binding.textViewTitle.text.toString())
+
+        //When orientation changes or when the user exit app (without closing it), stop animation. Restart roulette.
+        if(binding.roulette.isAnimationRunning()){
+            binding.roulette.stopSpinning()
+            outState.putFloat(MAIN_ACT_ROULETTE_ROTATION, 0f)
+        }else{
+            outState.putFloat(MAIN_ACT_ROULETTE_ROTATION, binding.roulette.getRouletteRotation())
+        }
     }
 
     override fun onRestoreInstanceState(savedInstanceState: Bundle) {
         super.onRestoreInstanceState(savedInstanceState)
-        roulette.setRouletteRotation(savedInstanceState.getFloat(MAIN_ACT_ROULETTE_ROTATION))
-        roulette.setRouletteOptionList(savedInstanceState.getStringArrayList(OPTIONS_ACT_ROULETTE_LIST)!!)
-        textView_result.text = savedInstanceState.getString(MAIN_ACT_TEXTVIEW_RESULT)
-        textView_title.text = savedInstanceState.getString(OPTIONS_ACT_ROULETTE_TITLE)
-        if (textView_result.text.isNotEmpty()) {
-            search_button.visibility = View.VISIBLE
-            share_button.visibility = View.VISIBLE
+        binding.roulette.setRouletteRotation(savedInstanceState.getFloat(MAIN_ACT_ROULETTE_ROTATION))
+        binding.roulette.setRouletteOptionList(savedInstanceState.getStringArrayList(OPTIONS_ACT_ROULETTE_LIST)!!)
+        binding.textViewResult.text = savedInstanceState.getString(MAIN_ACT_TEXTVIEW_RESULT)
+        binding.textViewTitle.text = savedInstanceState.getString(OPTIONS_ACT_ROULETTE_TITLE)
+        if (binding.textViewResult.text.isNotEmpty()) {
+            binding.searchButton.visibility = View.VISIBLE
+            binding.shareButton.visibility = View.VISIBLE
         }
 
         if( (supportFragmentManager.findFragmentById(R.id.fragment_container_view)) != null){
@@ -143,8 +158,8 @@ class MainActivity : AppCompatActivity(), OnRouletteViewListener, View.OnClickLi
         mainRoulette = getRoulette()
         Log.d(TAG, "onResume: roulette is $mainRoulette")
         //Set the values from roulette object
-        roulette.setRouletteOptionList(mainRoulette.options)
-        textView_title.text = mainRoulette.name
+        binding.roulette.setRouletteOptionList(mainRoulette.options)
+        binding.textViewTitle.text = mainRoulette.name
     }
 
     //Function to get Global Roulette from SharedPreferences
@@ -185,13 +200,13 @@ class MainActivity : AppCompatActivity(), OnRouletteViewListener, View.OnClickLi
     }
 
     private fun showEditFragment(){
-        fragment_container_view.visibility = View.VISIBLE
-        roulette.visibility = View.GONE
-        button_spin.visibility = View.GONE
-        textView_result.visibility = View.GONE
-        textView_title.visibility = View.GONE
-        share_button.visibility = View.GONE
-        search_button.visibility = View.GONE
+        binding.fragmentContainerView.visibility = View.VISIBLE
+        binding.roulette.visibility = View.GONE
+        binding.buttonSpin.visibility = View.GONE
+        binding.textViewResult.visibility = View.GONE
+        binding.textViewTitle.visibility = View.GONE
+        binding.shareButton.visibility = View.GONE
+        binding.searchButton.visibility = View.GONE
     }
 
     private fun removeEditFragment(fragment: Fragment?){
@@ -199,23 +214,23 @@ class MainActivity : AppCompatActivity(), OnRouletteViewListener, View.OnClickLi
             supportFragmentManager.beginTransaction().remove(fragment).commit()
         }
 
-        fragment_container_view.visibility = View.GONE
-        roulette.visibility = View.VISIBLE
-        button_spin.visibility = View.VISIBLE
-        textView_title.visibility = View.VISIBLE
-        textView_result.visibility = View.VISIBLE
-        share_button.visibility = View.INVISIBLE
-        search_button.visibility = View.INVISIBLE
-        roulette.setRouletteRotation(0f)
+        binding.fragmentContainerView.visibility = View.GONE
+        binding.roulette.visibility = View.VISIBLE
+        binding.buttonSpin.visibility = View.VISIBLE
+        binding.textViewTitle.visibility = View.VISIBLE
+        binding.textViewResult.visibility = View.VISIBLE
+        binding.shareButton.visibility = View.INVISIBLE
+        binding.searchButton.visibility = View.INVISIBLE
+        binding.roulette.setRouletteRotation(0f)
     }
 
     override fun onClick(v: View) {
         when(v.id){
             R.id.button_spin -> {
-                textView_result.text = resources.getString(R.string.EMPTY_STRING)
-                search_button.visibility = View.INVISIBLE
-                share_button.visibility = View.INVISIBLE
-                roulette.spin(7000, 2.7f*(0.9f + Random.nextFloat()))
+                binding.textViewResult.text = resources.getString(R.string.EMPTY_STRING)
+                binding.searchButton.visibility = View.INVISIBLE
+                binding.shareButton.visibility = View.INVISIBLE
+                binding.roulette.spin(7000, 2.7f*(0.9f + Random.nextFloat()))
             }
             R.id.share_button->{
                 try {
@@ -234,7 +249,7 @@ class MainActivity : AppCompatActivity(), OnRouletteViewListener, View.OnClickLi
                     sendIntent.setType("image/png")
                     startActivity(sendIntent)*/
                     val sendIntent = Intent(Intent.ACTION_SEND)
-                    sendIntent.putExtra(Intent.EXTRA_TEXT, "Decision Maker [${Utils.getDate()}]\n${textView_title.text}: ${textView_result.text} win!")
+                    sendIntent.putExtra(Intent.EXTRA_TEXT, "Decision Maker [${Utils.getDate()}]\n${binding.textViewTitle.text}: ${binding.textViewResult.text} win!")
                     sendIntent.type = "text/plain"
                     startActivity(Intent.createChooser(sendIntent, null))
 
@@ -243,7 +258,7 @@ class MainActivity : AppCompatActivity(), OnRouletteViewListener, View.OnClickLi
                 }
             }
             R.id.search_button->{
-                val gsIntentUri = Uri.parse(String.format(resources.getString(R.string.URL_GOOGLE), URLEncoder.encode(textView_result.text.toString(), "UTF-8")))
+                val gsIntentUri = Uri.parse(String.format(resources.getString(R.string.URL_GOOGLE), URLEncoder.encode(binding.textViewResult.text.toString(), "UTF-8")))
                 val googleSearchIntent = Intent(Intent.ACTION_VIEW, gsIntentUri)
                 startActivity(googleSearchIntent)
             }
@@ -258,23 +273,23 @@ class MainActivity : AppCompatActivity(), OnRouletteViewListener, View.OnClickLi
     override fun OnRouletteSpinCompleted(idx: Int, choice: String) {
         val sp = MediaPlayer.create(this, R.raw.success)
         sp.start()
-        textView_result.text = choice.toUpperCase(Locale.ROOT)
-        search_button.visibility = View.VISIBLE
-        share_button.visibility = View.VISIBLE
+        binding.textViewResult.text = choice.uppercase(Locale.ROOT)
+        binding.searchButton.visibility = View.VISIBLE
+        binding.shareButton.visibility = View.VISIBLE
     }
 
     override fun OnRouletteSpinEvent(speed: Float) {
         Log.d(TAG, ".OnRouletteSpinEvent: speed is $speed")
-        if(roulette.getRouletteOptionsCount() > 1 && abs(speed) > 0.09f) {
-            textView_result.text = resources.getString(R.string.EMPTY_STRING)
-            search_button.visibility = View.INVISIBLE
-            share_button.visibility = View.INVISIBLE
+        if(binding.roulette.getRouletteOptionsCount() > 1 && abs(speed) > 0.09f) {
+            binding.textViewResult.text = resources.getString(R.string.EMPTY_STRING)
+            binding.searchButton.visibility = View.INVISIBLE
+            binding.shareButton.visibility = View.INVISIBLE
             val t = (min(9000f, 7000f*abs(speed))).toLong()
-            roulette.spin(t, 1.1f*speed)
+            binding.roulette.spin(t, 1.1f*speed)
         }
     }
 
-    var lastOptionChangeTime = System.currentTimeMillis()
+    private var lastOptionChangeTime = System.currentTimeMillis()
     override fun OnRouletteOptionChanged() {
         val t = System.currentTimeMillis()
         val dt = t-lastOptionChangeTime
@@ -292,10 +307,10 @@ class MainActivity : AppCompatActivity(), OnRouletteViewListener, View.OnClickLi
         Log.d(TAG, "onSaveClicked: starts")
         mainRoulette = getRoulette()
         //Set the values from roulette object
-        roulette.setRouletteOptionList(mainRoulette.options)
-        textView_title.text = mainRoulette.name
+        binding.roulette.setRouletteOptionList(mainRoulette.options)
+        binding.textViewTitle.text = mainRoulette.name
 
-        textView_result.text = resources.getString(R.string.EMPTY_STRING)
+        binding.textViewResult.text = resources.getString(R.string.EMPTY_STRING)
 
         removeEditFragment(supportFragmentManager.findFragmentById(R.id.fragment_container_view))
     }

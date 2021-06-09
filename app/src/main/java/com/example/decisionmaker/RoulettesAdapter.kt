@@ -2,11 +2,9 @@ package com.example.decisionmaker
 
 import android.util.Log
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageButton
-import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.example.decisionmaker.databinding.RouletteListItemsBinding
 
 private const val TAG = "RoulettesAdapter"
 
@@ -18,28 +16,25 @@ class RoulettesAdapter(private var listRoulettes: ArrayList<Roulette>?, private 
         fun onRouletteClick(roulette: Roulette)
     }
 
-    //Provide a reference to the type of views that you are using
-    class RoulettesViewHolder(view: View) : RecyclerView.ViewHolder(view){
-        val rouletteName: TextView = view.findViewById(R.id.rli_name)
-        val buttonEditRoulette: ImageButton = view.findViewById(R.id.rli_edit)
-    }
+    //View holder
+    inner class RoulettesViewHolder(val binding: RouletteListItemsBinding) : RecyclerView.ViewHolder(binding.root)
 
     //Inflating a layout from XML and returning the holder
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RoulettesViewHolder {
-        //Create a new view, which defines the UI of the list item
-        val view = LayoutInflater.from(parent.context).inflate(R.layout.roulette_list_items, parent, false)
-        return RoulettesViewHolder(view)
+        //Create a viewBinding, which defines the UI of the list item
+        val binding = RouletteListItemsBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        return RoulettesViewHolder(binding)
     }
 
     //Replace the contents of a view. Populate data into the item through holder
     override fun onBindViewHolder(holder: RoulettesViewHolder, position: Int) {
         // Get element from the list at this position and replace the contents of the view with that element
         if(listRoulettes != null){
-            holder.rouletteName.text = listRoulettes!![position].name
+            holder.binding.rliName.text = listRoulettes!![position].name
         }
 
         //Listener for edit button
-        holder.buttonEditRoulette.setOnClickListener {
+        holder.binding.rliEdit.setOnClickListener {
             Log.d(TAG, "edit button tapped. Roulette Name: ${listRoulettes!![position]}, Position: $position")
             listener.onEditClick(listRoulettes!![position])
         }
