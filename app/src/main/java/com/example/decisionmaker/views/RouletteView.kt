@@ -18,6 +18,8 @@ import kotlin.math.*
 //TAG for log
 private const val TAG = "RouletteView"
 
+private const val ONE_DEGREE_IN_RADIANS = 0.01745329251
+
 class RouletteView : View {
     private class RouletteAttributes{
         var paintPalette = ArrayList<Paint>()
@@ -103,7 +105,7 @@ class RouletteView : View {
             partitionDivisions.clear()
             if(n > 1) {
                 for (i in 0 until n) {
-                    val t = 0.01745329251 * i * partitionStep // Angle in radians
+                    val t = ONE_DEGREE_IN_RADIANS * i * partitionStep // Angle in radians
                     val lx = innerR * cos(t).toFloat() + o.x  // Line end Point.x
                     val ly = innerR * sin(t).toFloat() + o.y  // Line end Point.y
                     partitionDivisions.add(PointF(lx, ly))
@@ -125,7 +127,6 @@ class RouletteView : View {
     private var attrs = RouletteAttributes()
     private var geom = RouletteViewGeometry()
 
-    private var tSize = 0
     private var rouletteOptions: ArrayList<String> = ArrayList()
     var onRouletteViewListener:OnRouletteViewListener? = null
 
@@ -157,8 +158,6 @@ class RouletteView : View {
         attrs.paintChooser.color = MaterialColors.getColor(this, R.attr.colorSecondary)
         //attrs.paintForeground.color = Color.rgb(8, 99, 191) //blue
         attrs.paintForeground.color = MaterialColors.getColor(this, R.attr.colorSecondary)
-
-        tSize = getTextBoxOffset("o").y
     }
 
     /**
@@ -212,11 +211,11 @@ class RouletteView : View {
         canvas.save()
         canvas.rotate(geom.rotation - 90, geom.o.x, geom.o.y)
 
-        var t = 0f
+        var startAngle = 0f
         //Draw choices as 'pieces of cake'
         for(i in 0 until rouletteOptions.size){
-            canvas.drawArc(geom.arcBoxLT.x, geom.arcBoxLT.y, geom.arcBoxRB.x, geom.arcBoxRB.y, t, geom.partitionStep, true, attrs.paintPalette[i])
-            t += geom.partitionStep
+            canvas.drawArc(geom.arcBoxLT.x, geom.arcBoxLT.y, geom.arcBoxRB.x, geom.arcBoxRB.y, startAngle, geom.partitionStep, true, attrs.paintPalette[i])
+            startAngle += geom.partitionStep
         }
 
         if(rouletteOptions.size > 1) { //Multiple options
@@ -225,10 +224,21 @@ class RouletteView : View {
                 val line = geom.getPartitionDivision(i)
                 canvas.drawLine(geom.o.x, geom.o.y, line.x, line.y, attrs.paintHighlight)
             }
+
             //Draw choices text
             canvas.rotate(geom.partitionStep/2, geom.o.x, geom.o.y)
+            //Variables to handle dynamic/relative text size
+            val deltaWidth = geom.innerR / 4f
+            val maxWidth = geom.o.x + geom.innerR - (geom.o.x + geom.innerR / 3.8f)
+            val maxHeight = calculateMaxHeight(deltaWidth, deltaWidth, geom.partitionStep)
+
             for (choice in rouletteOptions) {
-                canvas.drawText(choice, geom.o.x + geom.innerR / 4, geom.o.y + tSize, attrs.paintHighlight)
+                //Dynamic text size
+                attrs.paintHighlight.textSize = calculateFontSize(choice, attrs.paintHighlight, maxWidth, maxHeight)
+                //Get delta height, which is half of the text height
+                val deltaHeight = getTextRealHeight(choice)
+
+                canvas.drawText(choice, geom.o.x + deltaWidth, geom.o.y + deltaHeight, attrs.paintHighlight)
                 canvas.rotate(geom.partitionStep, geom.o.x, geom.o.y)
             }
         }else{ //Single choice, draw centered text
@@ -237,6 +247,30 @@ class RouletteView : View {
         }
         canvas.restore()
         canvas.drawPath(geom.chooserPath, attrs.paintChooser)
+    }
+
+    /**
+     * Calculate the text font size, depending on the size of the string and max values.
+     * @param text is the string to calculate its font size
+     * @param paint is the Paint object
+     * @param maxWidth is the maximum length of X axis
+     * @param maxHeight is the maximum length of Y axis
+     * @return the fitted font size
+     */
+    private fun calculateFontSize(text: String, paint: Paint, maxWidth: Float, maxHeight: Float): Float{
+        val bound = Rect()
+        var size = 20.0f
+        val step = 10.0f
+        paint.textSize = size
+        while(true){
+            paint.getTextBounds(text, 0, text.length, bound)
+            if(bound.width() < maxWidth && bound.height() < maxHeight){
+                size += step
+                paint.textSize = size
+            }else{
+                return size - step
+            }
+        }
     }
 
     /**
@@ -377,6 +411,18 @@ class RouletteView : View {
         return Point(bounds.width()/2, bounds.height()/2)
     }
 
+    /**
+     * Get half of the text height depending on highlightPaint textSize,
+     * bounds.height != (bounds.top - bounds.bottom), that's why is the real height.
+     * @param txt is the text string for calculating its half-height
+     * @return text real height divided by two
+     */
+    private fun getTextRealHeight(txt:String): Int{
+        val bounds = Rect()
+        attrs.paintHighlight.getTextBounds(txt, 0, txt.length, bounds)
+        return ((bounds.top*(-1)) - bounds.bottom) / 2
+    }
+
 
     //Auxiliar variables for touch events
     private var moveLastPoint = PointF(0f, 0f)
@@ -481,6 +527,18 @@ class RouletteView : View {
         // Cross product give angle direction: >0 -> clockwise, otherwise -> counterclockwise
         val cosa = max(-1f, min(1f,this.scalarProduct(p)/(this.length() * p.length())))
         return 57.2957795131f*acos(cosa)*sign(this.crossProductZ(p))
+    }
+
+    /**
+     * Law of cosines. a^2 = b^2 + c^2 - 2bc cosA
+     * @param A is the angle between a and b
+     * @param b is the a side of the triangle
+     * @param c is the b side of the triangle
+     * @return the a side of the triangle
+     */
+    private fun calculateMaxHeight(b: Float, c: Float, A: Float): Float {
+        val angleRadians = A * ONE_DEGREE_IN_RADIANS
+        return sqrt(b.pow(2) + c.pow(2) - (2*b*c * cos(angleRadians))).toFloat()
     }
 }
 
