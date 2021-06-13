@@ -1,4 +1,4 @@
-package com.example.decisionmaker
+package com.example.decisionmaker.adapters
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -35,7 +35,7 @@ class OptionsAdapter(private var listOptions: ArrayList<String>) : RecyclerView.
     }
 
     fun addOption(choice:String){
-        listOptions.add(choice)
+        listOptions.add(0, choice)
         notifyDataSetChanged()
     }
 

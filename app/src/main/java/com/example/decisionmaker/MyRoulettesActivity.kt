@@ -11,7 +11,10 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.decisionmaker.adapters.RoulettesAdapter
 import com.example.decisionmaker.databinding.ActivityMyRoulettesBinding
+import com.example.decisionmaker.models.Roulette
+import com.example.decisionmaker.viewmodels.MyRoulettesViewModel
 
 private const val TAG = "MyRoulettesActivity"
 
@@ -21,7 +24,7 @@ class MyRoulettesActivity : AppCompatActivity(), AddEditFragment.OnSaveClicked, 
     private lateinit var binding: ActivityMyRoulettesBinding
 
     //Variable to hold the adapter
-    private val roulettesAdapter by lazy {RoulettesAdapter(null, this)}
+    private val roulettesAdapter by lazy { RoulettesAdapter(null, this) }
 
     //View Model
     private val viewModel: MyRoulettesViewModel by viewModels()
@@ -78,6 +81,7 @@ class MyRoulettesActivity : AppCompatActivity(), AddEditFragment.OnSaveClicked, 
             R.id.menuRoulettes_add -> {
                 Log.d(TAG, "onOptionsItemSelected: Add New Roulette")
                 rouletteEditRequest(null)
+                viewModel.editRoulette = null
                 true
             }
             else -> super.onOptionsItemSelected(item)
@@ -111,13 +115,15 @@ class MyRoulettesActivity : AppCompatActivity(), AddEditFragment.OnSaveClicked, 
     }
 
     //Callback function to remove AddEditFragment, from this Activity, when a Roulette is saved
-    override fun onSaveClicked() {
+    override fun onSaveClicked(roulette: Roulette){
+        viewModel.saveRoulette(roulette)
         removeEditFragment(supportFragmentManager.findFragmentById(R.id.fragment_container_view))
     }
 
     //Callback function to edit a Roulette
     override fun onEditClick(roulette: Roulette) {
         rouletteEditRequest(roulette)
+        viewModel.editRoulette = roulette
     }
 
     //Callback function to select a Roulette

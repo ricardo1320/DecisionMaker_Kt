@@ -1,9 +1,10 @@
-package com.example.decisionmaker
+package com.example.decisionmaker.adapters
 
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import com.example.decisionmaker.models.Roulette
 import com.example.decisionmaker.databinding.RouletteListItemsBinding
 
 private const val TAG = "RoulettesAdapter"

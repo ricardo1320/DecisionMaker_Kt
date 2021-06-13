@@ -6,10 +6,10 @@ import android.util.Log
 import android.view.*
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.decisionmaker.adapters.OptionsAdapter
 import com.example.decisionmaker.databinding.FragmentAddEditBinding
-import com.google.gson.GsonBuilder
+import com.example.decisionmaker.models.Roulette
 
 private const val TAG = "AddEditFragment"
 
@@ -29,9 +29,6 @@ class AddEditFragment : Fragment(), View.OnClickListener {
     private var roulette: Roulette? = null
 
     private var listener: OnSaveClicked? = null
-
-    //View Model
-    private val viewModel: MyRoulettesViewModel by activityViewModels()
 
     //View binding
     private var _binding: FragmentAddEditBinding? = null
@@ -120,29 +117,6 @@ class AddEditFragment : Fragment(), View.OnClickListener {
         }
     }
 
-    //Function to save the Roulette
-    private fun saveRoulette(){
-        //Create a newTask object with the details to be saved, then call the viewModel's saveTask function to save it.
-        val newRoulette = rouletteFromUI()
-        Log.d(TAG, "saveRoulette: roulette $roulette, newRoulette $newRoulette")
-
-        //Different behaviour depending the Parent Activity
-        if((activity?.javaClass?.simpleName) == MainActivity::class.java.simpleName){
-            //Convert the Roulette to JSON string
-            val jsonString = GsonBuilder().create().toJson(newRoulette)
-            //Save the string in SharedPreferences
-            val sharedPref = requireContext().getSharedPreferences(PREFERENCES_FILE, Context.MODE_PRIVATE)
-            sharedPref.edit().putString(GLOBAL_ROULETTE, jsonString).apply()
-        }else if((activity?.javaClass?.simpleName) == MyRoulettesActivity::class.java.simpleName){
-            if(newRoulette != roulette){
-                //If edited, delete the old roulette and add the new one. If adding new roulette, deleteRoulette won't do anything
-                //This is just in case the Roulette name changes, the options list changes is managed by OptionsAdapter automatically
-                viewModel.deleteRoulette(roulette)
-                roulette = viewModel.saveRoulette(newRoulette)
-            }
-        }
-    }
-
     //Build a Roulette object from the UI widgets
     private fun rouletteFromUI(): Roulette {
         //Get options list
@@ -157,9 +131,8 @@ class AddEditFragment : Fragment(), View.OnClickListener {
         else{
             if(binding.editTextRouletteTitle.text.isBlank())
                 binding.editTextRouletteTitle.setText(resources.getString(R.string.ROULETTE_DEFAULT_TITLE))
-            //TODO save in database
-            saveRoulette()  //Save in the list of the view model
-            listener?.onSaveClicked()
+
+            listener?.onSaveClicked(rouletteFromUI())
         }
     }
 
@@ -193,7 +166,7 @@ class AddEditFragment : Fragment(), View.OnClickListener {
      * activity.
      */
     interface OnSaveClicked{
-        fun onSaveClicked()
+        fun onSaveClicked(roulette: Roulette)
     }
 
     companion object {

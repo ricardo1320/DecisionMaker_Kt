@@ -1,4 +1,4 @@
-package com.example.decisionmaker
+package com.example.decisionmaker.models
 
 import android.os.Parcelable
 import kotlinx.android.parcel.Parcelize

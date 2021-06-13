@@ -371,13 +371,6 @@ class RouletteView : View {
     }
 
     /**
-     * Get the roulette option list
-     */
-    fun getRouletteOptionList():ArrayList<String>{
-        return rouletteOptions
-    }
-
-    /**
      * Get the roulette options count
      */
     fun getRouletteOptionsCount():Int{
