@@ -1,7 +1,10 @@
 package com.example.decisionmaker
 
+import android.content.Context
 import android.content.Intent
 import android.graphics.*
+import android.hardware.Sensor
+import android.hardware.SensorManager
 import android.media.MediaPlayer
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
@@ -29,8 +32,17 @@ private const val TAG = "MainActivity"
 const val GLOBAL_ROULETTE = "GlobalRoulette"
 const val GLOBAL_ROULETTE_LIST = "GlobalRouletteList"
 const val PREFERENCES_FILE = "PreferencesFile"
+const val SETTINGS_SOUND = "sound"
+const val SETTINGS_SHAKE = "shake"
+const val SETTINGS_COLOR = "color_scheme"
 
 class MainActivity : AppCompatActivity(), OnRouletteViewListener, View.OnClickListener, AddEditFragment.OnSaveClicked {
+
+    //Variables for Shake detection
+    private var sensorManager: SensorManager? = null
+    private var accelerometer: Sensor? = null
+    private var shakeDetector: ShakeDetector? = null
+
     private var mp:MediaPlayer? = null
     private var sd = 0
     private var backPressedFragment: Boolean = false
@@ -48,7 +60,6 @@ class MainActivity : AppCompatActivity(), OnRouletteViewListener, View.OnClickLi
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        //Subscribe to ViewModel
         subscribeViewModel()
 
         binding.roulette.onRouletteViewListener = this
@@ -58,8 +69,13 @@ class MainActivity : AppCompatActivity(), OnRouletteViewListener, View.OnClickLi
 
         mp = MediaPlayer.create(this@MainActivity, R.raw.pop2)
         sd = (mp?.duration!!/1.5).toInt()
+
+        initSensor()
     }
 
+    /**
+     * Subscribe to view model's observable objects.
+     */
     private fun subscribeViewModel(){
         viewModel.rouletteTitle.observe(this, {rouletteTitle ->
             binding.textViewTitle.text = rouletteTitle
@@ -75,7 +91,27 @@ class MainActivity : AppCompatActivity(), OnRouletteViewListener, View.OnClickLi
         })
     }
 
-    //Clean screen when coming back from MyRoulettesActivity with a new Roulette selected
+    /**
+     * Initialize variables related to the Sensor Event Listener.
+     * To detect when the phone shakes, and spin the roulette.
+     */
+    private fun initSensor(){
+        sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
+        accelerometer = sensorManager!!.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+        shakeDetector = ShakeDetector()
+        shakeDetector!!.setOnShakeListener(object : ShakeDetector.OnShakeListener{
+            override fun onShake(speed: Float) {
+                if(viewModel.isShakeOn) {
+                    spinRequested(speed)
+                }
+            }
+        })
+    }
+
+    /**
+     * OnRestart -> Clean screen when coming back from MyRoulettesActivity
+     * with a new roulette selected
+     */
     override fun onRestart() {
         Log.d(TAG, "onRestart: starts")
         super.onRestart()
@@ -85,6 +121,22 @@ class MainActivity : AppCompatActivity(), OnRouletteViewListener, View.OnClickLi
             binding.shareButton.visibility = View.INVISIBLE
             binding.searchButton.visibility = View.INVISIBLE
         }
+    }
+
+    /**
+     * OnResume -> register Sensor Event Listener
+     */
+    override fun onResume() {
+        super.onResume()
+        sensorManager?.registerListener(shakeDetector, accelerometer, SensorManager.SENSOR_DELAY_NORMAL)
+    }
+
+    /**
+     * OnPause -> unregister Sensor Event Listener
+     */
+    override fun onPause() {
+        super.onPause()
+        sensorManager?.unregisterListener(shakeDetector)
     }
 
     //Menu overridden methods
@@ -111,6 +163,15 @@ class MainActivity : AppCompatActivity(), OnRouletteViewListener, View.OnClickLi
                     return false
                 }
                 startActivity(Intent(this, MyRoulettesActivity::class.java))
+                true
+            }
+            R.id.menu_settings -> {
+                //Launch next activity
+                if(binding.roulette.isAnimationRunning()){
+                    Toast.makeText(this, resources.getString(R.string.UNTIL_SPIN_COMPLETED), Toast.LENGTH_SHORT).show()
+                    return false
+                }
+                startActivity(Intent(this, SettingsActivity::class.java))
                 true
             }
             else -> super.onOptionsItemSelected(item)
@@ -186,10 +247,7 @@ class MainActivity : AppCompatActivity(), OnRouletteViewListener, View.OnClickLi
     override fun onClick(v: View) {
         when(v.id){
             R.id.button_spin -> {
-                viewModel.setResult(resources.getString(R.string.EMPTY_STRING))
-                binding.searchButton.visibility = View.INVISIBLE
-                binding.shareButton.visibility = View.INVISIBLE
-                binding.roulette.spin(7000, 2.7f*(0.9f + Random.nextFloat()))
+                spinRequested(2.7f)
             }
             R.id.share_button->{
                 try {
@@ -224,14 +282,23 @@ class MainActivity : AppCompatActivity(), OnRouletteViewListener, View.OnClickLi
         }
     }
 
+    private fun spinRequested(speed: Float){
+        viewModel.setResult(resources.getString(R.string.EMPTY_STRING))
+        binding.searchButton.visibility = View.INVISIBLE
+        binding.shareButton.visibility = View.INVISIBLE
+        binding.roulette.spin(7000, speed*(0.9f + Random.nextFloat()))
+    }
+
     /**
      * Roulette spin animation End
      * @param idx is the picked numeric index in the choice array,
      * @param choice is the option picked
      */
     override fun OnRouletteSpinCompleted(idx: Int, choice: String) {
-        val sp = MediaPlayer.create(this, R.raw.success)
-        sp.start()
+        if(viewModel.isSoundOn) {
+            val sp = MediaPlayer.create(this, R.raw.success)
+            sp.start()
+        }
         viewModel.setResult(choice.uppercase(Locale.ROOT))
         viewModel.setRotation(binding.roulette.getRouletteRotation())
         binding.searchButton.visibility = View.VISIBLE
@@ -251,15 +318,17 @@ class MainActivity : AppCompatActivity(), OnRouletteViewListener, View.OnClickLi
 
     private var lastOptionChangeTime = System.currentTimeMillis()
     override fun OnRouletteOptionChanged() {
-        val t = System.currentTimeMillis()
-        val dt = t-lastOptionChangeTime
-        if(dt < sd){
-            return
-        }
-        lastOptionChangeTime = t
+        if(viewModel.isSoundOn) {
+            val t = System.currentTimeMillis()
+            val dt = t - lastOptionChangeTime
+            if (dt < sd) {
+                return
+            }
+            lastOptionChangeTime = t
 
-        mp?.seekTo(0)
-        mp?.start()
+            mp?.seekTo(0)
+            mp?.start()
+        }
     }
 
     //Callback function from AddEditFragment

@@ -13,4 +13,8 @@
         style="@style/Theme.DecisionMaker.IconTint"
         android:title="@string/menutitle_showRoulettes"
         app:showAsAction="always" />
+    <item
+        android:id="@+id/menu_settings"
+        android:title="@string/title_activity_settings"
+        app:showAsAction="never" />
 </menu>

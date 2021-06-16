@@ -7,15 +7,21 @@ import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import com.example.decisionmaker.GLOBAL_ROULETTE
-import com.example.decisionmaker.PREFERENCES_FILE
-import com.example.decisionmaker.R
+import com.example.decisionmaker.*
 import com.example.decisionmaker.models.Roulette
 import com.google.gson.GsonBuilder
 
 private const val TAG = "MainViewModel"
 
 class MainViewModel(application: Application): AndroidViewModel(application) {
+
+    //Settings variables
+    var isSoundOn: Boolean = false
+        private set
+    var isShakeOn: Boolean = false
+        private set
+    var colorScheme: String? = null
+        private set
 
     //Variable for Roulette object
     lateinit var roulette: Roulette
@@ -51,10 +57,13 @@ class MainViewModel(application: Application): AndroidViewModel(application) {
         when(key){
             GLOBAL_ROULETTE -> {
                 readRoulette()
-                _result.value = getApplication<Application>().resources.getString(R.string.EMPTY_STRING)
+                _result.value = ""
                 _rotation.value = 0f
                 isNewRouletteSelected = true
             }
+            SETTINGS_SOUND -> { readSound() }
+            SETTINGS_SHAKE -> { readShake() }
+            SETTINGS_COLOR -> { readColor() }
         }
     }
 
@@ -62,7 +71,26 @@ class MainViewModel(application: Application): AndroidViewModel(application) {
         Log.d(TAG, "MainViewModel: starts")
         //Register the SharedPreferences listener (Shared Preferences observer)
         sharedPref.registerOnSharedPreferenceChangeListener(shPListener)
+        readSettings()
         readRoulette()
+    }
+
+    private fun readSettings(){
+        readSound()
+        readShake()
+        readColor()
+    }
+
+    private fun readSound(){
+        isSoundOn = sharedPref.getBoolean(SETTINGS_SOUND, false)
+    }
+
+    private fun readShake(){
+        isShakeOn = sharedPref.getBoolean(SETTINGS_SHAKE, false)
+    }
+
+    private fun readColor(){
+        colorScheme = sharedPref.getString(SETTINGS_COLOR, null)
     }
 
     private fun readRoulette(){

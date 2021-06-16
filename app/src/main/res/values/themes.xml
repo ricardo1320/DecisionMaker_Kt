@@ -13,6 +13,7 @@
         <item name="android:statusBarColor" tools:targetApi="l">?attr/colorPrimaryVariant</item>
         <item name="android:windowLightStatusBar">true</item>
         <!-- Customize your theme here. -->
+        <item name="alertDialogTheme">@style/AlertDialogCustom</item>
 
 
     </style>
@@ -28,6 +29,15 @@
 
     <style name="Theme.DecisionMaker.TextView">
         <item name="android:textColor">@color/black</item>
+    </style>
+
+    <style name="AlertDialogCustom" parent="ThemeOverlay.MaterialComponents.Dialog.Alert">
+        <item name="buttonBarNegativeButtonStyle">@style/buttonNegative</item>
+    </style>
+
+    <style name="buttonNegative">
+        <item name="android:textColor">@color/blue_google</item>
+        <item name="android:background">@android:color/transparent</item>
     </style>
 
 

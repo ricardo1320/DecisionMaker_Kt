@@ -1,0 +1,20 @@
+<resources>
+    <!-- Color Scheme Preference -->
+    <string-array name="color_entries">
+        <item>Red</item>
+        <item>Orange</item>
+        <item>Purple</item>
+        <item>Blue</item>
+        <item>Yellow</item>
+        <item>Green</item>
+    </string-array>
+
+    <string-array name="color_values">
+        <item>red</item>
+        <item>orange</item>
+        <item>purple</item>
+        <item>blue</item>
+        <item>yellow</item>
+        <item>green</item>
+    </string-array>
+</resources>
