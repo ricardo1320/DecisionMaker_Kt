@@ -81,7 +81,7 @@ class MainActivity : AppCompatActivity(), OnRouletteViewListener, View.OnClickLi
             binding.textViewTitle.text = rouletteTitle
         })
         viewModel.optionsList.observe(this, {optionsList ->
-            binding.roulette.setRouletteOptionList(optionsList)
+            binding.roulette.setRouletteOptionList(optionsList, viewModel.colorScheme.toString())
         })
         viewModel.result.observe(this, {result ->
             binding.textViewResult.text = result

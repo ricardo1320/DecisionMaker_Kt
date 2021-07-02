@@ -7,6 +7,8 @@
         <item>Blue</item>
         <item>Yellow</item>
         <item>Green</item>
+        <item>Multi</item>
+        <item>Grey Scale</item>
     </string-array>
 
     <string-array name="color_values">
@@ -16,5 +18,7 @@
         <item>blue</item>
         <item>yellow</item>
         <item>green</item>
+        <item>multi</item>
+        <item>greyscale</item>
     </string-array>
 </resources>

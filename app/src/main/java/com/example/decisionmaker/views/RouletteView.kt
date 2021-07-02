@@ -32,8 +32,50 @@ class RouletteView : View {
          * This function calculates the paint brushes for coloring
          * the roulette, giving a degraded effect
          */
-        fun setPaintBrush(n:Int, colorStart:Int = Color.rgb(255,0,0), colorEnd:Int = Color.rgb(255, 160, 0)){
+        fun setPaintBrush(n:Int, colorSettings:String = "red"){
             paintPalette.clear()
+
+            val colorStart:Int
+            val colorEnd:Int
+
+            when(colorSettings){
+                "red" -> {
+                    colorStart = Color.rgb(255,0,0)
+                    colorEnd = Color.rgb(255, 160, 0)
+                }
+                "orange" -> {
+                    colorStart = Color.rgb(255,100,0)
+                    colorEnd = Color.rgb(255, 200, 0)
+                }
+                "purple" -> {
+                    colorStart = Color.rgb(85,0,255)
+                    colorEnd = Color.rgb(200, 0, 255)
+                }
+                "blue" -> {
+                    colorStart = Color.rgb(0,200,255)
+                    colorEnd = Color.rgb(0, 0, 255)
+                }
+                "yellow" -> {
+                    colorStart = Color.rgb(255,200,0)
+                    colorEnd = Color.rgb(255, 255, 0)
+                }
+                "green" -> {
+                    colorStart = Color.rgb(120,255,0)
+                    colorEnd = Color.rgb(0, 255, 200)
+                }
+                "multi" -> {
+                    colorStart = Color.rgb(255,0,0)
+                    colorEnd = Color.rgb(0, 255, 255)
+                }
+                "greyscale" -> {
+                    colorStart = Color.rgb(0,0,0)
+                    colorEnd = Color.rgb(202, 200, 200)
+                }
+                else -> {
+                    colorStart = Color.rgb(255,0,0)
+                    colorEnd = Color.rgb(255, 160, 0)
+                }
+            }
 
             val (r1, g1, b1) = listOf(Color.red(colorStart), Color.green(colorStart), Color.blue(colorStart))
             val (r2, g2, b2) = listOf(Color.red(colorEnd), Color.green(colorEnd), Color.blue(colorEnd))
@@ -70,10 +112,10 @@ class RouletteView : View {
                 o = PointF(value.x/2f, value.y/2f) //Origin at the roulette center
 
                 chooserPath = Path() //Triangle
-                chooserPath.moveTo(o.x + 00f, o.y - outerR + 85f)
-                chooserPath.lineTo(o.x + 30f, o.y - outerR + 5f)
-                chooserPath.lineTo(o.x - 30f, o.y - outerR + 5f)
-                chooserPath.lineTo(o.x + 00f, o.y - outerR + 85f)
+                chooserPath.moveTo(o.x, o.y - outerR*0.8f)
+                chooserPath.lineTo(o.x + outerR*0.06f, o.y - outerR + ((outerR-innerR)/2f))
+                chooserPath.lineTo(o.x - outerR*0.06f, o.y - outerR + ((outerR-innerR)/2f))
+                chooserPath.lineTo(o.x, o.y - outerR*0.8f)
                 chooserPath.close()
 
                 //Partitions Boxes LT:Left-Top; RB:Right-Bottom
@@ -363,10 +405,10 @@ class RouletteView : View {
      * and colors, then redraw
      * @param options is the option list
      */
-    fun setRouletteOptionList(options:ArrayList<String>){
+    fun setRouletteOptionList(options:ArrayList<String>, colorSettings:String){
         rouletteOptions = options
         geom.setPartitions(rouletteOptions.size)
-        attrs.setPaintBrush(rouletteOptions.size)
+        attrs.setPaintBrush(rouletteOptions.size, colorSettings)
         invalidate()
     }
 

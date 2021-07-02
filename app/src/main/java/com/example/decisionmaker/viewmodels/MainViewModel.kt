@@ -90,7 +90,7 @@ class MainViewModel(application: Application): AndroidViewModel(application) {
     }
 
     private fun readColor(){
-        colorScheme = sharedPref.getString(SETTINGS_COLOR, null)
+        colorScheme = sharedPref.getString(SETTINGS_COLOR, "red")
     }
 
     private fun readRoulette(){
