@@ -17,4 +17,16 @@
         android:id="@+id/menu_settings"
         android:title="@string/title_activity_settings"
         app:showAsAction="never" />
+    <item
+        android:id="@+id/menu_rate"
+        android:title="@string/title_activity_rate"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/menu_share"
+        android:title="@string/title_activity_share"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/menu_feedback"
+        android:title="@string/title_activity_feedback"
+        app:showAsAction="never" />
 </menu>

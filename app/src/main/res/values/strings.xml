@@ -14,6 +14,8 @@
     <string name="ROULETTE_DEFAULT_TITLE">Roulette 1</string>
     <string name="ROULETTE_INIT_TITLE">What to eat today?</string>
     <string name="MIN_OPTIONS_CONSTRAINT">At least two options!</string>
+    <string name="MAX_OPTIONS_CONSTRAINT">You\'ve reached the maximum number of options!</string>
+    <string name="MAX_ROULETTES_CONSTRAINT">You\'ve reached the maximum number of roulettes!</string>
     <string name="UNTIL_SPIN_COMPLETED">Wait until roulette spin completed</string>
     <string name="URL_GOOGLE">https://www.google.com/search?q=%s</string>
     <string name="title_activity_my_roulettes">My Roulettes</string>
@@ -33,5 +35,8 @@
 
     <!-- Roulette Preferences -->
     <string name="color_title">Color scheme</string>
+    <string name="title_activity_rate">Rate the app</string>
+    <string name="title_activity_share">Share the app</string>
+    <string name="title_activity_feedback">Send feedback</string>
 
 </resources>

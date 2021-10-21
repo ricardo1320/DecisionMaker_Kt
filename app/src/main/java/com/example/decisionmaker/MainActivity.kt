@@ -1,5 +1,6 @@
 package com.example.decisionmaker
 
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.graphics.*
@@ -7,7 +8,6 @@ import android.hardware.Sensor
 import android.hardware.SensorManager
 import android.media.MediaPlayer
 import android.net.Uri
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
@@ -15,12 +15,12 @@ import android.view.MenuItem
 import android.view.View
 import android.widget.Toast
 import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import com.example.decisionmaker.databinding.ActivityMainBinding
 import com.example.decisionmaker.models.Roulette
 import com.example.decisionmaker.viewmodels.MainViewModel
 import com.example.decisionmaker.views.OnRouletteViewListener
-import java.lang.Exception
 import java.net.URLEncoder
 import java.util.*
 import kotlin.math.*
@@ -52,6 +52,9 @@ class MainActivity : AppCompatActivity(), OnRouletteViewListener, View.OnClickLi
 
     //View Model
     private val viewModel: MainViewModel by viewModels()
+
+    //Variable to handle toast messages overlapping
+    private lateinit var toast: Toast
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -149,33 +152,49 @@ class MainActivity : AppCompatActivity(), OnRouletteViewListener, View.OnClickLi
         return when (item.itemId) {
             R.id.menu_modify -> {
                 //Launch AddEditFragment
-                if(binding.roulette.isAnimationRunning()){
-                    Toast.makeText(this, resources.getString(R.string.UNTIL_SPIN_COMPLETED), Toast.LENGTH_SHORT).show()
-                    return false
-                }
+                if(!checkConditions()) return false
                 rouletteEditRequest(viewModel.roulette)
                 true
             }
             R.id.menumain_showRoulettes -> {
                 //Launch next activity
-                if(binding.roulette.isAnimationRunning()){
-                    Toast.makeText(this, resources.getString(R.string.UNTIL_SPIN_COMPLETED), Toast.LENGTH_SHORT).show()
-                    return false
-                }
+                if(!checkConditions()) return false
                 startActivity(Intent(this, MyRoulettesActivity::class.java))
                 true
             }
             R.id.menu_settings -> {
                 //Launch next activity
-                if(binding.roulette.isAnimationRunning()){
-                    Toast.makeText(this, resources.getString(R.string.UNTIL_SPIN_COMPLETED), Toast.LENGTH_SHORT).show()
-                    return false
-                }
+                if(!checkConditions()) return false
                 startActivity(Intent(this, SettingsActivity::class.java))
+                true
+            }
+            R.id.menu_rate -> {
+                if(!checkConditions()) return false
+                rateApp()
+                true
+            }
+            R.id.menu_share -> {
+                if(!checkConditions()) return false
+                shareApp()
+                true
+            }
+            R.id.menu_feedback -> {
+                if(!checkConditions()) return false
+                sendFeedback()
                 true
             }
             else -> super.onOptionsItemSelected(item)
         }
+    }
+
+    //Function to cancel toast - manage messages overlapping
+    private fun checkConditions(): Boolean{
+        return if(binding.roulette.isAnimationRunning()){
+            if(this::toast.isInitialized) toast.cancel()
+            toast = Toast.makeText(this, resources.getString(R.string.UNTIL_SPIN_COMPLETED), Toast.LENGTH_SHORT)
+            toast.show()
+            false
+        }else true
     }
 
     //Manage screen orientation changes
@@ -359,6 +378,32 @@ class MainActivity : AppCompatActivity(), OnRouletteViewListener, View.OnClickLi
             backPressedFragment = true
             removeEditFragment(fragment)
         }
+    }
+
+    private fun rateApp(){
+        try{
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$packageName")))
+        }catch (e: ActivityNotFoundException) {
+            //Toast.makeText(this, "Impossible to find an application for the market", Toast.LENGTH_LONG).show()
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=$packageName")))
+        }
+    }
+
+    private fun shareApp(){
+        val sendIntent = Intent(Intent.ACTION_SEND)
+        sendIntent.putExtra(Intent.EXTRA_TEXT, "Hey, check out this App! https://play.google.com/store/apps/details?id=$packageName")
+        sendIntent.type = "text/plain"
+        startActivity(Intent.createChooser(sendIntent, "Share app via"))
+    }
+
+    private fun sendFeedback(){
+        val emailArray:Array<String> = arrayOf("asdflolrichi@gmail.com")
+        val intent = Intent(Intent.ACTION_SENDTO)
+        intent.data = Uri.parse("mailto:") // only email apps should handle this
+        intent.putExtra(Intent.EXTRA_EMAIL, emailArray)
+        intent.putExtra(Intent.EXTRA_SUBJECT, "Decision Maker App Feedback")
+        //startActivity(intent)
+        startActivity(Intent.createChooser(intent, null))
     }
 
 }

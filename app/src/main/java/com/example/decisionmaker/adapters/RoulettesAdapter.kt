@@ -59,7 +59,8 @@ class RoulettesAdapter(private var listRoulettes: ArrayList<Roulette>?, private 
     //Function to remove an item
     fun removeAt(position: Int){
         listRoulettes!!.removeAt(position)
-        notifyItemRemoved(position)
+        //notifyItemRemoved(position)
+        notifyDataSetChanged()
     }
 
     fun swapList(newListRoulettes: ArrayList<Roulette>){

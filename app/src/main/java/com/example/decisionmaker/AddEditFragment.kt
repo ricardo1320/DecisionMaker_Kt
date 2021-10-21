@@ -13,6 +13,10 @@ import com.example.decisionmaker.models.Roulette
 
 private const val TAG = "AddEditFragment"
 
+// max and min allowed options constant
+private const val MAX_OPTIONS = 10
+private const val MIN_OPTIONS = 2
+
 // the fragment initialization parameters
 private const val ARG_ROULETTE = "roulette"
 
@@ -34,6 +38,9 @@ class AddEditFragment : Fragment(), View.OnClickListener {
     private var _binding: FragmentAddEditBinding? = null
     //This property is only valid between onCreateView and onDestroyView
     private val binding get() = _binding!!
+
+    //Variable to handle toast messages overlapping
+    private lateinit var toast: Toast
 
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.d(TAG, "onCreate: starts")
@@ -78,10 +85,18 @@ class AddEditFragment : Fragment(), View.OnClickListener {
             override fun onKey(v: View?, keyCode: Int, event: KeyEvent?): Boolean {
                 if((event?.action == KeyEvent.ACTION_DOWN) && (keyCode == KeyEvent.KEYCODE_ENTER)){
                     if(binding.editTextAddOption.text.isNotBlank()){
-                        optionsAdapter.addOption(binding.editTextAddOption.text.trim().toString())
-                        binding.editTextAddOption.text.clear()
-                        binding.editTextAddOption.requestFocus()
-                        return true
+                        //Check for the maximum allowed number of options
+                        if(optionsAdapter.itemCount < MAX_OPTIONS){
+                            optionsAdapter.addOption(binding.editTextAddOption.text.trim().toString())
+                            binding.editTextAddOption.text.clear()
+                            binding.editTextAddOption.requestFocus()
+                            return true
+                        }else{
+                            cancelToast()
+                            toast = Toast.makeText(activity, resources.getString(R.string.MAX_OPTIONS_CONSTRAINT), Toast.LENGTH_LONG)
+                            toast.show()
+                        }
+
                     }
                 }
                 return false
@@ -102,9 +117,17 @@ class AddEditFragment : Fragment(), View.OnClickListener {
     override fun onClick(v: View) {
         when(v.id){
             R.id.button_addOption -> {
+                Log.d(TAG, "onViewCreated-onKey: options count is ${optionsAdapter.itemCount}")
                 if(binding.editTextAddOption.text.isNotBlank()){
-                    optionsAdapter.addOption(binding.editTextAddOption.text.trim().toString())
-                    binding.editTextAddOption.text.clear()
+                    //Check for the maximum allowed number of options
+                    if(optionsAdapter.itemCount < MAX_OPTIONS){
+                        optionsAdapter.addOption(binding.editTextAddOption.text.trim().toString())
+                        binding.editTextAddOption.text.clear()
+                    }else{
+                        cancelToast()
+                        toast = Toast.makeText(activity, resources.getString(R.string.MAX_OPTIONS_CONSTRAINT), Toast.LENGTH_LONG)
+                        toast.show()
+                    }
                 }
             }
             R.id.button_clearTitle -> {
@@ -117,6 +140,11 @@ class AddEditFragment : Fragment(), View.OnClickListener {
         }
     }
 
+    //Function to cancel toast - manage toast messages overlapping
+    private fun cancelToast(){
+        if (this::toast.isInitialized) toast.cancel()
+    }
+
     //Build a Roulette object from the UI widgets
     private fun rouletteFromUI(): Roulette {
         //Get options list
@@ -126,9 +154,11 @@ class AddEditFragment : Fragment(), View.OnClickListener {
 
     //Check options are at least two (2)
     private fun checkMinOptions(){
-        if(optionsAdapter.itemCount < 2)
-            Toast.makeText(activity, resources.getString(R.string.MIN_OPTIONS_CONSTRAINT), Toast.LENGTH_LONG).show()
-        else{
+        if(optionsAdapter.itemCount < MIN_OPTIONS) {
+            cancelToast()
+            toast = Toast.makeText(activity, resources.getString(R.string.MIN_OPTIONS_CONSTRAINT), Toast.LENGTH_LONG)
+            toast.show()
+        }else{
             if(binding.editTextRouletteTitle.text.isBlank())
                 binding.editTextRouletteTitle.setText(resources.getString(R.string.ROULETTE_DEFAULT_TITLE))
 
