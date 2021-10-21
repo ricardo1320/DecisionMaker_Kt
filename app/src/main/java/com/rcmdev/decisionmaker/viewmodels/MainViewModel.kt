@@ -1,21 +1,17 @@
-package com.example.decisionmaker.viewmodels
+package com.rcmdev.decisionmaker.viewmodels
 
 import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
-import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import com.example.decisionmaker.*
-import com.example.decisionmaker.models.Roulette
+import com.rcmdev.decisionmaker.*
+import com.rcmdev.decisionmaker.models.Roulette
 import com.google.gson.GsonBuilder
-
-private const val TAG = "MainViewModel"
 
 class MainViewModel(application: Application): AndroidViewModel(application) {
 
-    //Settings variables
     var isSoundOn: Boolean = false
         private set
     var isShakeOn: Boolean = false
@@ -23,7 +19,6 @@ class MainViewModel(application: Application): AndroidViewModel(application) {
     var colorScheme: String? = null
         private set
 
-    //Variable for Roulette object
     lateinit var roulette: Roulette
         private set
 
@@ -35,7 +30,6 @@ class MainViewModel(application: Application): AndroidViewModel(application) {
 
     var isNewRouletteSelected: Boolean = false
 
-    //LiveData objects
     private val _rouletteTitle = MutableLiveData<String>()
     val rouletteTitle: LiveData<String>
         get() = _rouletteTitle
@@ -52,7 +46,6 @@ class MainViewModel(application: Application): AndroidViewModel(application) {
     val rotation: LiveData<Float>
         get() = _rotation
 
-    //Observe Shared Preferences changes
     private val shPListener = SharedPreferences.OnSharedPreferenceChangeListener{_, key ->
         when(key){
             GLOBAL_ROULETTE -> {
@@ -68,8 +61,6 @@ class MainViewModel(application: Application): AndroidViewModel(application) {
     }
 
     init {
-        Log.d(TAG, "MainViewModel: starts")
-        //Register the SharedPreferences listener (Shared Preferences observer)
         sharedPref.registerOnSharedPreferenceChangeListener(shPListener)
         readSettings()
         readRoulette()
@@ -81,20 +72,13 @@ class MainViewModel(application: Application): AndroidViewModel(application) {
         readColor()
     }
 
-    private fun readSound(){
-        isSoundOn = sharedPref.getBoolean(SETTINGS_SOUND, false)
-    }
+    private fun readSound(){ isSoundOn = sharedPref.getBoolean(SETTINGS_SOUND, false) }
 
-    private fun readShake(){
-        isShakeOn = sharedPref.getBoolean(SETTINGS_SHAKE, false)
-    }
+    private fun readShake(){ isShakeOn = sharedPref.getBoolean(SETTINGS_SHAKE, false) }
 
-    private fun readColor(){
-        colorScheme = sharedPref.getString(SETTINGS_COLOR, "red")
-    }
+    private fun readColor(){ colorScheme = sharedPref.getString(SETTINGS_COLOR, "red") }
 
     private fun readRoulette(){
-        Log.d(TAG, "readRoulette: starts")
         jsonString = sharedPref.getString(GLOBAL_ROULETTE, null)
 
         roulette = if(jsonString != null){
@@ -103,38 +87,28 @@ class MainViewModel(application: Application): AndroidViewModel(application) {
             getDefaultRoulette()
         }
 
-        //Update LiveData
         _rouletteTitle.value = roulette.name
         _optionsList.value = roulette.options
     }
 
     fun writeRoulette(roulette: Roulette){
-        Log.d(TAG, "writeRoulette: starts")
         jsonString = GsonBuilder().create().toJson(roulette)
         sharedPref.edit().putString(GLOBAL_ROULETTE, jsonString).apply()
     }
 
-    //Function to build default roulette (just the first time the app is installed)
     private fun getDefaultRoulette(): Roulette {
-        //Build options list
         val rouletteOptions:ArrayList<String> = ArrayList()
         rouletteOptions.add("Tacos")
         rouletteOptions.add("Pizza")
         rouletteOptions.add("Sushi")
         rouletteOptions.add("Burger")
         rouletteOptions.add("Hot-dogs")
-
-        //Return Roulette object
         return Roulette(getApplication<Application>().resources.getString(R.string.ROULETTE_INIT_TITLE), rouletteOptions)
     }
 
-    fun setResult(result: String){
-        _result.value = result
-    }
+    fun setResult(result: String){ _result.value = result }
 
-    fun setRotation(rotation: Float){
-        _rotation.value = rotation
-    }
+    fun setRotation(rotation: Float){ _rotation.value = rotation }
 
     fun deepCopy(roulette: Roulette){
         jsonString = GsonBuilder().create().toJson(roulette)
@@ -143,13 +117,9 @@ class MainViewModel(application: Application): AndroidViewModel(application) {
 
     fun swapRoulette(){
         roulette = oldRoulette
-        //Update LiveData
         _rouletteTitle.value = roulette.name
         _optionsList.value = roulette.options
     }
 
-    //Unsubscribe the observers, to avoid memory leaks
-    override fun onCleared() {
-        sharedPref.unregisterOnSharedPreferenceChangeListener(shPListener)
-    }
+    override fun onCleared() { sharedPref.unregisterOnSharedPreferenceChangeListener(shPListener) }
 }

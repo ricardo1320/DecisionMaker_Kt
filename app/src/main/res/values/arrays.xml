@@ -1,5 +1,4 @@
 <resources>
-    <!-- Color Scheme Preference -->
     <string-array name="color_entries">
         <item>Red</item>
         <item>Orange</item>

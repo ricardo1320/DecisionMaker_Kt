@@ -22,21 +22,15 @@
     <string name="menutitle_showRoulettes">My Roulettes</string>
     <string name="menu_title_add">Add</string>
     <string name="title_activity_settings">Settings</string>
-
-    <!-- Preference Titles -->
+    <string name="error">Error</string>
     <string name="general_header">General</string>
     <string name="roulette_header">Roulette</string>
-
-    <!-- General Preferences -->
     <string name="sound_title">Sound</string>
     <string name="sound_summary">Allow tone while Roulette is spinning</string>
     <string name="shake_title">Shake</string>
     <string name="shake_summary">Allow Roulette to spin by shaking the device</string>
-
-    <!-- Roulette Preferences -->
     <string name="color_title">Color scheme</string>
     <string name="title_activity_rate">Rate the app</string>
     <string name="title_activity_share">Share the app</string>
     <string name="title_activity_feedback">Send feedback</string>
-
 </resources>

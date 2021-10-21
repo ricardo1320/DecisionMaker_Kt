@@ -16,7 +16,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <com.example.decisionmaker.views.RouletteView
+    <com.rcmdev.decisionmaker.views.RouletteView
         android:id="@+id/roulette"
         android:layout_width="wrap_content"
         android:layout_height="0dp"

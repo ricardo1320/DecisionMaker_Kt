@@ -1,4 +1,4 @@
-package com.example.decisionmaker
+package com.rcmdev.decisionmaker
 
 import android.content.ActivityNotFoundException
 import android.content.Context
@@ -9,7 +9,6 @@ import android.hardware.SensorManager
 import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Bundle
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -17,18 +16,15 @@ import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
-import com.example.decisionmaker.databinding.ActivityMainBinding
-import com.example.decisionmaker.models.Roulette
-import com.example.decisionmaker.viewmodels.MainViewModel
-import com.example.decisionmaker.views.OnRouletteViewListener
+import com.rcmdev.decisionmaker.databinding.ActivityMainBinding
+import com.rcmdev.decisionmaker.models.Roulette
+import com.rcmdev.decisionmaker.viewmodels.MainViewModel
+import com.rcmdev.decisionmaker.views.OnRouletteViewListener
 import java.net.URLEncoder
 import java.util.*
 import kotlin.math.*
 import kotlin.random.Random
 
-private const val TAG = "MainActivity"
-
-//Constants for saving values in Shared Preferences
 const val GLOBAL_ROULETTE = "GlobalRoulette"
 const val GLOBAL_ROULETTE_LIST = "GlobalRouletteList"
 const val PREFERENCES_FILE = "PreferencesFile"
@@ -37,28 +33,18 @@ const val SETTINGS_SHAKE = "shake"
 const val SETTINGS_COLOR = "color_scheme"
 
 class MainActivity : AppCompatActivity(), OnRouletteViewListener, View.OnClickListener, AddEditFragment.OnSaveClicked {
-
-    //Variables for Shake detection
     private var sensorManager: SensorManager? = null
     private var accelerometer: Sensor? = null
     private var shakeDetector: ShakeDetector? = null
-
     private var mp:MediaPlayer? = null
     private var sd = 0
     private var backPressedFragment: Boolean = false
-
-    //Variable for view binding
     private lateinit var binding: ActivityMainBinding
-
-    //View Model
     private val viewModel: MainViewModel by viewModels()
-
-    //Variable to handle toast messages overlapping
     private lateinit var toast: Toast
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        Log.d(TAG, "onCreate: starts")
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -116,9 +102,7 @@ class MainActivity : AppCompatActivity(), OnRouletteViewListener, View.OnClickLi
      * with a new roulette selected
      */
     override fun onRestart() {
-        Log.d(TAG, "onRestart: starts")
         super.onRestart()
-
         if(viewModel.isNewRouletteSelected){
             viewModel.isNewRouletteSelected = false
             binding.shareButton.visibility = View.INVISIBLE
@@ -142,7 +126,6 @@ class MainActivity : AppCompatActivity(), OnRouletteViewListener, View.OnClickLi
         sensorManager?.unregisterListener(shakeDetector)
     }
 
-    //Menu overridden methods
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.menu, menu)
         return true
@@ -151,19 +134,16 @@ class MainActivity : AppCompatActivity(), OnRouletteViewListener, View.OnClickLi
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.menu_modify -> {
-                //Launch AddEditFragment
                 if(!checkConditions()) return false
                 rouletteEditRequest(viewModel.roulette)
                 true
             }
             R.id.menumain_showRoulettes -> {
-                //Launch next activity
                 if(!checkConditions()) return false
                 startActivity(Intent(this, MyRoulettesActivity::class.java))
                 true
             }
             R.id.menu_settings -> {
-                //Launch next activity
                 if(!checkConditions()) return false
                 startActivity(Intent(this, SettingsActivity::class.java))
                 true
@@ -187,20 +167,17 @@ class MainActivity : AppCompatActivity(), OnRouletteViewListener, View.OnClickLi
         }
     }
 
-    //Function to cancel toast - manage messages overlapping
     private fun checkConditions(): Boolean{
         return if(binding.roulette.isAnimationRunning()){
-            if(this::toast.isInitialized) toast.cancel()
-            toast = Toast.makeText(this, resources.getString(R.string.UNTIL_SPIN_COMPLETED), Toast.LENGTH_SHORT)
-            toast.show()
-            false
-        }else true
+                    if(this::toast.isInitialized) toast.cancel()
+                    toast = Toast.makeText(this, resources.getString(R.string.UNTIL_SPIN_COMPLETED), Toast.LENGTH_SHORT)
+                    toast.show()
+                    false
+                }else true
     }
 
-    //Manage screen orientation changes
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        //When orientation changes or when the user exit app (without closing it), stop animation. Restart roulette.
         if(binding.roulette.isAnimationRunning()){
             binding.roulette.stopSpinning()
             viewModel.setRotation(0f)
@@ -220,11 +197,8 @@ class MainActivity : AppCompatActivity(), OnRouletteViewListener, View.OnClickLi
     }
 
     private fun rouletteEditRequest(roulette: Roulette){
-        Log.d(TAG, "rouletteEditRequest: starts")
-        //Create a new fragment to edit the Roulette
         val newFragment = AddEditFragment.newInstance(roulette)
         supportFragmentManager.beginTransaction().add(R.id.fragment_container_view, newFragment).commit()
-
         viewModel.deepCopy(roulette)
         showEditFragment()
     }
@@ -270,27 +244,13 @@ class MainActivity : AppCompatActivity(), OnRouletteViewListener, View.OnClickLi
             }
             R.id.share_button->{
                 try {
-                    /*val bitmap = Bitmap.createBitmap(roulette.width, roulette.height, Bitmap.Config.ARGB_8888)
-                    val canvas = Canvas(bitmap)
-                    roulette.draw(canvas)
-                    var uri:Uri? = null
-                    val file = File(getExternalFilesDir(Environment.DIRECTORY_PICTURES), "share.png")
-                    val outStream = FileOutputStream(file)
-                    bitmap.compress(Bitmap.CompressFormat.PNG, 90, outStream)
-                    outStream.close()
-                    uri = FileProvider.getUriForFile(this, BuildConfig.APPLICATION_ID + ".provider", file)
-                    val sendIntent = Intent(android.content.Intent.ACTION_SEND)
-                    sendIntent.putExtra(Intent.EXTRA_STREAM, uri)
-                    sendIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                    sendIntent.setType("image/png")
-                    startActivity(sendIntent)*/
                     val sendIntent = Intent(Intent.ACTION_SEND)
                     sendIntent.putExtra(Intent.EXTRA_TEXT, "Decision Maker [${Utils.getDate()}]\n${binding.textViewTitle.text}: ${binding.textViewResult.text} win!")
                     sendIntent.type = "text/plain"
                     startActivity(Intent.createChooser(sendIntent, null))
 
                 }catch (e:Exception){
-                    Log.e(TAG, ".onClick: share_button error is ${e.printStackTrace()}")
+                    Toast.makeText(this, resources.getString(R.string.error), Toast.LENGTH_SHORT).show()
                 }
             }
             R.id.search_button->{
@@ -313,7 +273,7 @@ class MainActivity : AppCompatActivity(), OnRouletteViewListener, View.OnClickLi
      * @param idx is the picked numeric index in the choice array,
      * @param choice is the option picked
      */
-    override fun OnRouletteSpinCompleted(idx: Int, choice: String) {
+    override fun onRouletteSpinCompleted(idx: Int, choice: String) {
         if(viewModel.isSoundOn) {
             val sp = MediaPlayer.create(this, R.raw.success)
             sp.start()
@@ -324,8 +284,7 @@ class MainActivity : AppCompatActivity(), OnRouletteViewListener, View.OnClickLi
         binding.shareButton.visibility = View.VISIBLE
     }
 
-    override fun OnRouletteSpinEvent(speed: Float) {
-        Log.d(TAG, ".OnRouletteSpinEvent: speed is $speed")
+    override fun onRouletteSpinEvent(speed: Float) {
         if(binding.roulette.getRouletteOptionsCount() > 1 && abs(speed) > 0.09f) {
             viewModel.setResult(resources.getString(R.string.EMPTY_STRING))
             binding.searchButton.visibility = View.INVISIBLE
@@ -336,13 +295,11 @@ class MainActivity : AppCompatActivity(), OnRouletteViewListener, View.OnClickLi
     }
 
     private var lastOptionChangeTime = System.currentTimeMillis()
-    override fun OnRouletteOptionChanged() {
+    override fun onRouletteOptionChanged() {
         if(viewModel.isSoundOn) {
             val t = System.currentTimeMillis()
             val dt = t - lastOptionChangeTime
-            if (dt < sd) {
-                return
-            }
+            if (dt < sd) { return }
             lastOptionChangeTime = t
 
             mp?.seekTo(0)
@@ -350,13 +307,8 @@ class MainActivity : AppCompatActivity(), OnRouletteViewListener, View.OnClickLi
         }
     }
 
-    //Callback function from AddEditFragment
     override fun onSaveClicked(roulette: Roulette) {
-        Log.d(TAG, "onSaveClicked: starts")
-
-        //Set in Shared preferences
         viewModel.writeRoulette(roulette)
-
         viewModel.setResult(resources.getString(R.string.EMPTY_STRING))
         viewModel.setRotation(0f)
         removeEditFragment(supportFragmentManager.findFragmentById(R.id.fragment_container_view))
@@ -371,7 +323,6 @@ class MainActivity : AppCompatActivity(), OnRouletteViewListener, View.OnClickLi
         if(fragment == null){
             super.onBackPressed()
         }else{
-            Log.d(TAG, "Back pressed with fragment on screen")
             if(viewModel.roulette != viewModel.oldRoulette){
                 viewModel.swapRoulette()
             }
@@ -384,7 +335,6 @@ class MainActivity : AppCompatActivity(), OnRouletteViewListener, View.OnClickLi
         try{
             startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$packageName")))
         }catch (e: ActivityNotFoundException) {
-            //Toast.makeText(this, "Impossible to find an application for the market", Toast.LENGTH_LONG).show()
             startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=$packageName")))
         }
     }
@@ -399,10 +349,9 @@ class MainActivity : AppCompatActivity(), OnRouletteViewListener, View.OnClickLi
     private fun sendFeedback(){
         val emailArray:Array<String> = arrayOf("asdflolrichi@gmail.com")
         val intent = Intent(Intent.ACTION_SENDTO)
-        intent.data = Uri.parse("mailto:") // only email apps should handle this
+        intent.data = Uri.parse("mailto:")
         intent.putExtra(Intent.EXTRA_EMAIL, emailArray)
         intent.putExtra(Intent.EXTRA_SUBJECT, "Decision Maker App Feedback")
-        //startActivity(intent)
         startActivity(Intent.createChooser(intent, null))
     }
 

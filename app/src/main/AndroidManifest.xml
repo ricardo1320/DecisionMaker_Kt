@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest
     xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.decisionmaker">
-
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    package="com.rcmdev.decisionmaker">
 
     <application
         android:allowBackup="true"
@@ -15,21 +13,21 @@
         android:theme="@style/Theme.DecisionMaker">
 
         <activity
-            android:name=".SettingsActivity"
+            android:name="com.rcmdev.decisionmaker.SettingsActivity"
             android:label="@string/title_activity_settings"
-            android:parentActivityName=".MainActivity">
+            android:parentActivityName="com.rcmdev.decisionmaker.MainActivity">
         </activity>
 
         <activity
-            android:name=".MyRoulettesActivity"
+            android:name="com.rcmdev.decisionmaker.MyRoulettesActivity"
             android:label="@string/title_activity_my_roulettes"
-            android:parentActivityName=".MainActivity">
+            android:parentActivityName="com.rcmdev.decisionmaker.MainActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.example.decisionmaker.MainActivity" />
+                android:value="com.rcmdev.decisionmaker.MainActivity" />
         </activity>
 
-        <activity android:name=".MainActivity">
+        <activity android:name="com.rcmdev.decisionmaker.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

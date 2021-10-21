@@ -1,7 +1,6 @@
-package com.example.decisionmaker
+package com.rcmdev.decisionmaker
 
 import android.os.Bundle
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -12,29 +11,19 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.decisionmaker.adapters.RoulettesAdapter
-import com.example.decisionmaker.databinding.ActivityMyRoulettesBinding
-import com.example.decisionmaker.models.Roulette
-import com.example.decisionmaker.viewmodels.MyRoulettesViewModel
-import com.example.decisionmaker.views.SwipeToDeleteCallback
+import com.rcmdev.decisionmaker.adapters.RoulettesAdapter
+import com.rcmdev.decisionmaker.databinding.ActivityMyRoulettesBinding
+import com.rcmdev.decisionmaker.models.Roulette
+import com.rcmdev.decisionmaker.viewmodels.MyRoulettesViewModel
+import com.rcmdev.decisionmaker.views.SwipeToDeleteCallback
 
-private const val TAG = "MyRoulettesActivity"
-
-// max allowed number of roulettes constant
 private const val MAX_ROULETTES = 10
 
 class MyRoulettesActivity : AppCompatActivity(), AddEditFragment.OnSaveClicked, RoulettesAdapter.OnRouletteClickListener {
 
-    //Variable for view binding
     private lateinit var binding: ActivityMyRoulettesBinding
-
-    //Variable to hold the adapter
     private val roulettesAdapter by lazy { RoulettesAdapter(null, this) }
-
-    //View Model
     private val viewModel: MyRoulettesViewModel by viewModels()
-
-    //Variable to handle toast messages overlapping
     private lateinit var toast: Toast
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -43,51 +32,26 @@ class MyRoulettesActivity : AppCompatActivity(), AddEditFragment.OnSaveClicked, 
         binding = ActivityMyRoulettesBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        //Set the view correctly
         if( (supportFragmentManager.findFragmentById(R.id.fragment_container_view)) != null ){
             showEditFragment()
         }else{
             removeEditFragment(null)
         }
 
-        //Subscribe to the View Model and observe LiveData
         viewModel.rouletteList.observe(this, {rouletteList -> roulettesAdapter.swapList(rouletteList)})
-
-        //Initialise the adapter and associated it with the RecyclerView
         binding.rouletteList.layoutManager = LinearLayoutManager(this)
         binding.rouletteList.adapter = roulettesAdapter
 
-        //Implementing deleting by swapping
-        //Create an IteTouchHelper object and attach it to the recycler view
-//        val itemTouchHelper = ItemTouchHelper(
-//            object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT){
-//                override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder): Boolean {
-//                    //Implement this to allow sorting tasks by dragging them up and down in the list
-//                    return false
-//                }
-//
-//                override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-//                    Log.d(TAG, "onSwiped: starts")
-//                    if (direction == ItemTouchHelper.LEFT) {
-//                        roulettesAdapter.removeAt(viewHolder.adapterPosition)
-//                    }
-//                }
-//            }
-//        )
-
         val swipeHandler = object : SwipeToDeleteCallback(this){
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-                Log.d(TAG, "onSwiped: starts")
                 roulettesAdapter.removeAt(viewHolder.adapterPosition)
             }
         }
 
         val itemTouchHelper = ItemTouchHelper(swipeHandler)
         itemTouchHelper.attachToRecyclerView(binding.rouletteList)
-
     }
 
-    //Menu overridden methods
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.menu_myroulettesact, menu)
         return true
@@ -96,9 +60,7 @@ class MyRoulettesActivity : AppCompatActivity(), AddEditFragment.OnSaveClicked, 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.menuRoulettes_add -> {
-                //Check for the maximum allowed number of roulettes
                 if(roulettesAdapter.itemCount < MAX_ROULETTES){
-                    Log.d(TAG, "onOptionsItemSelected: Add New Roulette")
                     rouletteEditRequest(null)
                     viewModel.editRoulette = null
                 }else{
@@ -128,32 +90,22 @@ class MyRoulettesActivity : AppCompatActivity(), AddEditFragment.OnSaveClicked, 
     }
 
     private fun rouletteEditRequest(roulette: Roulette?){
-        Log.d(TAG, "rouletteEditRequest: starts")
-
-        //Create a new fragment to edit the Roulette
         val newFragment = AddEditFragment.newInstance(roulette)
         supportFragmentManager.beginTransaction().add(R.id.fragment_container_view, newFragment).commit()
-
         showEditFragment()
-        Log.d(TAG, "Exiting rouletteEditRequest")
     }
 
-    //Callback function to remove AddEditFragment, from this Activity, when a Roulette is saved
     override fun onSaveClicked(roulette: Roulette){
         viewModel.saveRoulette(roulette)
         removeEditFragment(supportFragmentManager.findFragmentById(R.id.fragment_container_view))
     }
 
-    //Callback function to edit a Roulette
     override fun onEditClick(roulette: Roulette) {
         rouletteEditRequest(roulette)
         viewModel.editRoulette = roulette
     }
 
-    //Callback function to select a Roulette
     override fun onRouletteClick(roulette: Roulette) {
-        //Save in SharedPreferences via ViewModel and finish activity
-        Log.d(TAG, "onRouletteClick: roulette is $roulette")
         viewModel.saveMainRoulette(roulette)
         finish()
     }

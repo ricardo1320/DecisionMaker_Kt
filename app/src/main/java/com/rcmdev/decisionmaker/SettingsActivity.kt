@@ -1,4 +1,4 @@
-package com.example.decisionmaker
+package com.rcmdev.decisionmaker
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity

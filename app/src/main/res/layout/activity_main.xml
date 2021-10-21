@@ -92,7 +92,7 @@
         android:orientation="horizontal"
         app:layout_constraintGuide_percent="0.25" />
 
-    <com.example.decisionmaker.views.RouletteView
+    <com.rcmdev.decisionmaker.views.RouletteView
         android:id="@+id/roulette"
         android:layout_width="0dp"
         android:layout_height="wrap_content"

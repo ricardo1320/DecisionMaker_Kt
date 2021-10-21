@@ -1,4 +1,4 @@
-package com.example.decisionmaker.views
+package com.rcmdev.decisionmaker.views
 
 import android.animation.Animator
 import android.animation.ValueAnimator
@@ -6,17 +6,13 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
-import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import androidx.core.graphics.toPointF
-import com.example.decisionmaker.R
+import com.rcmdev.decisionmaker.R
 import com.google.android.material.color.MaterialColors
 import kotlin.collections.ArrayList
 import kotlin.math.*
-
-//TAG for log
-private const val TAG = "RouletteView"
 
 private const val ONE_DEGREE_IN_RADIANS = 0.01745329251
 
@@ -88,7 +84,6 @@ class RouletteView : View {
             }
 
             for(i in 0 until n){
-                //Get color by linear interpolation between start and end colors
                 val p = Paint(Paint.ANTI_ALIAS_FLAG)
                 val r = r1 + i*(r2-r1)/(n-1)
                 val g = g1 + i*(g2-g1)/(n-1)
@@ -101,37 +96,36 @@ class RouletteView : View {
     }
 
     private class RouletteViewGeometry{
-        var o:PointF = PointF(0f,0f)    //View origin
-        var size = PointF(0f, 0f)       //View size (width, height)
+        var o:PointF = PointF(0f,0f)
+        var size = PointF(0f, 0f)
             set(value){
                 field = value
 
-                diameter = min(value.x, value.y) //Roulette diameter
+                diameter = min(value.x, value.y)
                 outerR = diameter / 2f
                 innerR = 0.96f*outerR
-                o = PointF(value.x/2f, value.y/2f) //Origin at the roulette center
+                o = PointF(value.x/2f, value.y/2f)
 
-                chooserPath = Path() //Triangle
+                chooserPath = Path()
                 chooserPath.moveTo(o.x, o.y - outerR*0.8f)
                 chooserPath.lineTo(o.x + outerR*0.06f, o.y - outerR + ((outerR-innerR)/2f))
                 chooserPath.lineTo(o.x - outerR*0.06f, o.y - outerR + ((outerR-innerR)/2f))
                 chooserPath.lineTo(o.x, o.y - outerR*0.8f)
                 chooserPath.close()
 
-                //Partitions Boxes LT:Left-Top; RB:Right-Bottom
                 arcBoxLT = PointF(o.x - innerR, o.y - innerR)
                 arcBoxRB = PointF(o.x + innerR, o.y + innerR)
             }
 
-        var innerR = 0.4f           //Roulette inner Radius
+        var innerR = 0.4f
         var outerR = 0.5f
-        var diameter = 1f           //Roulette diameter
+        var diameter = 1f
 
-        var scale = 1f              //Scale factor
-        var rotation = 0f           //Roulette rotation angle
-        var partitionStep = 360f    //Partition step angle
+        var scale = 1f
+        var rotation = 0f
+        var partitionStep = 360f
 
-        var chooserPath = Path()    //Chooser path
+        var chooserPath = Path()
         var arcBoxLT = PointF(0f, 0f)
         var arcBoxRB = PointF(0f, 0f)
 
@@ -147,9 +141,9 @@ class RouletteView : View {
             partitionDivisions.clear()
             if(n > 1) {
                 for (i in 0 until n) {
-                    val t = ONE_DEGREE_IN_RADIANS * i * partitionStep // Angle in radians
-                    val lx = innerR * cos(t).toFloat() + o.x  // Line end Point.x
-                    val ly = innerR * sin(t).toFloat() + o.y  // Line end Point.y
+                    val t = ONE_DEGREE_IN_RADIANS * i * partitionStep
+                    val lx = innerR * cos(t).toFloat() + o.x
+                    val ly = innerR * sin(t).toFloat() + o.y
                     partitionDivisions.add(PointF(lx, ly))
                 }
             }
@@ -165,7 +159,6 @@ class RouletteView : View {
         }
     }
 
-    //Roulette attributes
     private var attrs = RouletteAttributes()
     private var geom = RouletteViewGeometry()
 
@@ -189,16 +182,13 @@ class RouletteView : View {
      * Function for initializing the class (avoids repeated code in constructor)
      */
     private fun init() {
-        setBackgroundColor(Color.TRANSPARENT)   //Avoid phone theme apply to the view
-
+        setBackgroundColor(Color.TRANSPARENT)
         attrs.setPaintBrush(rouletteOptions.size)
         attrs.paintHighlight.color = Color.WHITE
         attrs.paintHighlight.textSize = 70f
         attrs.paintHighlight.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
         attrs.paintHighlight.strokeWidth = 5f
-
         attrs.paintChooser.color = MaterialColors.getColor(this, R.attr.colorSecondary)
-        //attrs.paintForeground.color = Color.rgb(8, 99, 191) //blue
         attrs.paintForeground.color = MaterialColors.getColor(this, R.attr.colorSecondary)
     }
 
@@ -210,8 +200,8 @@ class RouletteView : View {
      * @param oldh is the old view height
      */
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
-        geom.size = Point(w, h).toPointF()       //Update roulette geometry attributes
-        geom.setPartitions(rouletteOptions.size) //Since partitions depends of size attributes, update them
+        geom.size = Point(w, h).toPointF()
+        geom.setPartitions(rouletteOptions.size)
     }
 
     /**
@@ -224,7 +214,7 @@ class RouletteView : View {
         val wSpec = MeasureSpec.getSize(widthMeasureSpec) - (paddingLeft + paddingRight)
         val hSpec = MeasureSpec.getSize(heightMeasureSpec) - (paddingTop + paddingBottom)
 
-        var wDes = min(wSpec, hSpec)
+        val wDes = min(wSpec, hSpec)
         if(!isInEditMode) {
             setMeasuredDimension(wDes, wDes)
         }else{
@@ -240,7 +230,7 @@ class RouletteView : View {
         canvas.scale(geom.scale, geom.scale, geom.o.x, geom.o.y)
         canvas.drawCircle(geom.o.x, geom.o.y, geom.outerR, attrs.paintForeground)
 
-        if(rouletteOptions.size == 0) { //Empty roulette, draw single circle with advice text
+        if(rouletteOptions.size == 0) {
             val t1Off = getTextBoxOffset("Add")
             val t2Off = getTextBoxOffset("choices")
             canvas.drawCircle(geom.o.x, geom.o.y, geom.innerR, attrs.paintPalette[0])
@@ -254,36 +244,30 @@ class RouletteView : View {
         canvas.rotate(geom.rotation - 90, geom.o.x, geom.o.y)
 
         var startAngle = 0f
-        //Draw choices as 'pieces of cake'
         for(i in 0 until rouletteOptions.size){
             canvas.drawArc(geom.arcBoxLT.x, geom.arcBoxLT.y, geom.arcBoxRB.x, geom.arcBoxRB.y, startAngle, geom.partitionStep, true, attrs.paintPalette[i])
             startAngle += geom.partitionStep
         }
 
-        if(rouletteOptions.size > 1) { //Multiple options
-            //Draw lines for choices separation
+        if(rouletteOptions.size > 1) {
             for (i in 0 until rouletteOptions.size) {
                 val line = geom.getPartitionDivision(i)
                 canvas.drawLine(geom.o.x, geom.o.y, line.x, line.y, attrs.paintHighlight)
             }
 
-            //Draw choices text
             canvas.rotate(geom.partitionStep/2, geom.o.x, geom.o.y)
-            //Variables to handle dynamic/relative text size
             val deltaWidth = geom.innerR / 4f
             val maxWidth = geom.o.x + geom.innerR - (geom.o.x + geom.innerR / 3.8f)
             val maxHeight = calculateMaxHeight(deltaWidth, deltaWidth, geom.partitionStep)
 
             for (choice in rouletteOptions) {
-                //Dynamic text size
                 attrs.paintHighlight.textSize = calculateFontSize(choice, attrs.paintHighlight, maxWidth, maxHeight)
-                //Get delta height, which is half of the text height
                 val deltaHeight = getTextRealHeight(choice)
 
                 canvas.drawText(choice, geom.o.x + deltaWidth, geom.o.y + deltaHeight, attrs.paintHighlight)
                 canvas.rotate(geom.partitionStep, geom.o.x, geom.o.y)
             }
-        }else{ //Single choice, draw centered text
+        }else{
             val xOff = getTextBoxOffset(rouletteOptions[0]).x
             canvas.drawText(rouletteOptions[0], geom.o.x - xOff, geom.o.y, attrs.paintHighlight)
         }
@@ -327,9 +311,7 @@ class RouletteView : View {
     private var animationStarted = false
     private var lastStep = 0
 
-    fun isAnimationRunning() : Boolean{
-        return animationStarted
-    }
+    fun isAnimationRunning() : Boolean{ return animationStarted }
 
     private lateinit var animator: ValueAnimator
 
@@ -343,18 +325,16 @@ class RouletteView : View {
             val tEnd = ms / 1000f
             ValueAnimator.setFrameDelay(50)
             animator = ValueAnimator.ofFloat(0f, tEnd)
-            //val k = 1/(speed*speed)
 
             animator.duration = ms
             animator.addUpdateListener {
                 val t = it.animatedValue as Float
                 val b = speed*(tEnd - t)
-                //val b = speed*(exp((k*x)*(k*x)))
                 geom.rotation = (geom.rotation + b)%360
                 val st = getRouletteIndex()
 
                 if(lastStep != st && st >= 0){
-                    onRouletteViewListener?.OnRouletteOptionChanged()
+                    onRouletteViewListener?.onRouletteOptionChanged()
                     lastStep = st
                 }
                 invalidate()
@@ -380,19 +360,17 @@ class RouletteView : View {
     private val spinAnimationListener = object:Animator.AnimatorListener{
         override fun onAnimationEnd(animation: Animator?) {
             if(animationStarted) {
-                animationStarted = false                //Free flag for starting another animation process
-                if (rouletteOptions.size == 0) return    //Empty roulette
-                if (rouletteOptions.size == 1) {          //Only one option, choose it
-                    onRouletteViewListener?.OnRouletteSpinCompleted(0, rouletteOptions[0])
+                animationStarted = false
+                if (rouletteOptions.size == 0) return
+                if (rouletteOptions.size == 1) {
+                    onRouletteViewListener?.onRouletteSpinCompleted(0, rouletteOptions[0])
                     return
                 }
 
-                geom.rotation %= 360f           //Assert 0° ≤ rotation ≤ 360°
-                val idx = getRouletteIndex()    //Get roulette index
+                geom.rotation %= 360f
+                val idx = getRouletteIndex()
 
-                //Call spin completed listener with the idx and choice values as parameters
-                Log.d(TAG, ".onAnimationEnd: SPINCOMPLETED $idx ${rouletteOptions[idx]}")
-                onRouletteViewListener?.OnRouletteSpinCompleted(idx, rouletteOptions[idx])
+                onRouletteViewListener?.onRouletteSpinCompleted(idx, rouletteOptions[idx])
             }
         }
         override fun onAnimationStart(animation: Animator?) {}
@@ -415,24 +393,18 @@ class RouletteView : View {
     /**
      * Get the roulette options count
      */
-    fun getRouletteOptionsCount():Int{
-        return rouletteOptions.size
-    }
+    fun getRouletteOptionsCount():Int{ return rouletteOptions.size }
 
     /**
      * Get the roulette rotation
      */
-    fun getRouletteRotation():Float{
-        return geom.rotation
-    }
+    fun getRouletteRotation():Float{ return geom.rotation }
 
     /**
      * Set the Roulette rotation
      * @param rotation is the roulette rotation
      */
-    fun setRouletteRotation(rotation:Float){
-        geom.rotation = rotation
-    }
+    fun setRouletteRotation(rotation:Float){ geom.rotation = rotation }
 
     /**
      * Get text bounds depending on highlightPaint textSize,
@@ -458,8 +430,6 @@ class RouletteView : View {
         return ((bounds.top*(-1)) - bounds.bottom) / 2
     }
 
-
-    //Auxiliar variables for touch events
     private var moveLastPoint = PointF(0f, 0f)
     private var actionDown = false
     private var actionDownOutRt = false
@@ -472,19 +442,18 @@ class RouletteView : View {
      */
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent?): Boolean {
-        val p = PointF(event?.x!! - geom.o.x, event.y - geom.o.y) //Get touch point, with origin at view center
+        val p = PointF(event?.x!! - geom.o.x, event.y - geom.o.y)
 
         when(event.action.and(MotionEvent.ACTION_MASK)){
             MotionEvent.ACTION_UP -> {
-                if((actionDown || actionDownOutRt) && moved) onRouletteViewListener?.OnRouletteSpinEvent(rotSpeed)
+                if((actionDown || actionDownOutRt) && moved) onRouletteViewListener?.onRouletteSpinEvent(rotSpeed)
                 actionDown = false
                 actionDownOutRt = false
                 return false
             }
             MotionEvent.ACTION_DOWN->{
-                Log.d(TAG, ".onTouchEvent: RT_TOUCH_EVT: DOWN: ${p.x}, ${p.y}")
                 if(animationStarted) return false
-                if((p.length() <= geom.outerR) && (p.length() > 1)) { //New action down
+                if((p.length() <= geom.outerR) && (p.length() > 1)) {
                     moveLastPoint = PointF(p.x, p.y)
                     rotSpeed = 1f
                     actionDown = true
@@ -495,26 +464,24 @@ class RouletteView : View {
             MotionEvent.ACTION_MOVE -> {
                 if (animationStarted) return false
 
-                if (p.length() > geom.outerR || p.length() < 1f) { //Touch event outside the roulette
+                if (p.length() > geom.outerR || p.length() < 1f) {
                     actionDown = false
                     actionDownOutRt = true
                     return false
-                } else if (!actionDown && (p.length() <= geom.outerR)) { //New action down event
+                } else if (!actionDown && (p.length() <= geom.outerR)) {
                     actionDown = true
                     moveLastPoint = PointF(p.x, p.y)
                     rotSpeed = 1f
                     tStart = System.currentTimeMillis()
                     actionDownOutRt = false
                     moved = false
-                    Log.d(TAG, ".onTouchEvent: RT_TOUCH_MV: New action down")
                     return true
-                } else if (!actionDown) return false //Not action down, then return
+                } else if (!actionDown) return false
 
                 val t = System.currentTimeMillis()
                 val dt = t - tStart
                 tStart = t
 
-                //Get angle between vectors
                 val a = moveLastPoint.phase(p)
 
                 rotSpeed = a/dt.toFloat()
@@ -535,9 +502,7 @@ class RouletteView : View {
      * @param p is the second vector
      * @return (x,y)·p
      */
-    private fun PointF.scalarProduct(p:PointF) : Float{
-        return this.x*p.x + this.y*p.y
-    }
+    private fun PointF.scalarProduct(p:PointF) : Float{ return this.x*p.x + this.y*p.y }
 
     /**
      * Extend PointF function for calculating the
@@ -545,9 +510,7 @@ class RouletteView : View {
      * @param p is the second vector
      * @return ((x,y) x p).z
      */
-    private fun PointF.crossProductZ(p:PointF) : Float{
-        return this.x*p.y - this.y*p.x
-    }
+    private fun PointF.crossProductZ(p:PointF) : Float{ return this.x*p.y - this.y*p.x }
 
     /**
      * Extend PointF function for calculating the
@@ -557,9 +520,6 @@ class RouletteView : View {
      * @return α in degrees
      */
     private fun PointF.phase(p:PointF) : Float{
-        // cos(α) = v1·v2/(|v1|·|v2|)
-        // Due to Float precision error, assert 1 ≤ cos(a) ≤ 1
-        // Cross product give angle direction: >0 -> clockwise, otherwise -> counterclockwise
         val cosa = max(-1f, min(1f,this.scalarProduct(p)/(this.length() * p.length())))
         return 57.2957795131f*acos(cosa)*sign(this.crossProductZ(p))
     }

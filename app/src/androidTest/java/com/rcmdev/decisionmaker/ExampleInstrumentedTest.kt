@@ -1,4 +1,4 @@
-package com.example.decisionmaker
+package com.rcmdev.decisionmaker
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4

@@ -1,4 +1,4 @@
-package com.example.decisionmaker
+package com.rcmdev.decisionmaker
 
 import org.junit.Test
 
